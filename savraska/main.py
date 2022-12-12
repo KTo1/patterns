@@ -1,8 +1,9 @@
 import re
-from typing import List
+from typing import List, Type
 
 from savraska.urls import Url
 from savraska.exceptions import PageNotFound
+from savraska.view import View
 
 
 class Savraska:
@@ -24,7 +25,7 @@ class Savraska:
     def __prepare_url(self, url: str):
         return url if url.endswith('/') else f'{url}/'
 
-    def __find_view(self, raw_url: str):
+    def __find_view(self, raw_url: str) -> Type[View]:
         url = self.__prepare_url(raw_url)
 
         for path in self.urls:

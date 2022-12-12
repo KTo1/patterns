@@ -3,5 +3,5 @@ from views import HomePage
 
 
 urlpatterns = [
-    Url('^$', HomePage),
+    Url('^/$', HomePage),
 ]

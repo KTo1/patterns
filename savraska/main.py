@@ -16,6 +16,8 @@ class Savraska:
         :param environ: словарь данных от сервера
         :param start_response: функция для ответа серверу
         """
+        from pprint import pprint
+        pprint(environ)
 
         # сначала в функцию start_response передаем код ответа и заголовки
         start_response('200 OK', [('Content-Type', 'text/html')])

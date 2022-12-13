@@ -18,14 +18,14 @@ class Savraska:
         :param start_response: функция для ответа серверу
         """
 
-        from pprint import pprint
-        pprint(environ)
+        # from pprint import pprint
+        # pprint(environ)
 
         view = self.__get_view(environ)
         request = self.__get_request(environ)
         response = self.__get_response(environ, view, request)
 
-        start_response('200 OK', [('Content-Type', 'text/html')])
+        start_response('200 OK', [('Content-Type', 'text/html; charset=UTF-8')])
 
         return [response]
 
@@ -34,6 +34,7 @@ class Savraska:
 
     def __find_view(self, raw_url: str) -> Type[View]:
         url = self.__prepare_url(raw_url)
+        print(url)
         for path in self.urls:
             m = re.match(path.url, url)
             if m is not None:

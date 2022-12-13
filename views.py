@@ -9,17 +9,24 @@ class HomePage(View):
     def get(self, request, *args, **kwargs):
         context = {'time': str(datetime.now())}
         body = build_template(request, context, 'home.html')
-        return Response(body=body)
+        return Response(request, body=body)
 
+
+class AboutPage(View):
+
+    def get(self, request, *args, **kwargs):
+        context = {'session_id': str(request.session_id)}
+        body = build_template(request, context, 'about.html')
+        return Response(request, body=body)
 
 class Math(View):
     def get(self, request, *args, **kwargs):
         first = request.GET.get('first')
         if not first or not first[0].isnumeric():
-            return Response(body='first не задан')
+            return Response(request, body='first не задан')
 
         second = request.GET.get('second')
         if not second or not second[0].isnumeric():
-            return Response(body='second не задан')
+            return Response(request, body='second не задан')
 
-        return Response(body=f'Sum: {int(first[0]) + int(second[0])}')
+        return Response(request, body=f'Sum: {int(first[0]) + int(second[0])}')

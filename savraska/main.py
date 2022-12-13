@@ -6,13 +6,15 @@ from savraska.exceptions import PageNotFound, MethodNotAllowed
 from savraska.view import View
 from savraska.request import Request
 from savraska.response import Response
+from savraska.middleware import BaseMiddleWare
 
 
 class Savraska:
 
-    def __init__(self, urls: List[Url], settings: dict):
+    def __init__(self, urls: List[Url], settings: dict, middlewares: List[Type[BaseMiddleWare]]):
         self.urls = urls
         self.settings = settings
+        self.middlewares = middlewares
 
     def __call__(self, environ, start_response):
         """
@@ -22,7 +24,10 @@ class Savraska:
 
         view = self.__get_view(environ)
         request = self.__get_request(environ)
+        self.__apply_middleware_to_request(request)
+
         response = self.__get_response(environ, view, request)
+        self.__apply_middleware_to_response(response)
 
         start_response(str(response.status_code), response.headers.items())
 
@@ -54,3 +59,11 @@ class Savraska:
             raise MethodNotAllowed
 
         return getattr(view, method)(request)
+
+    def __apply_middleware_to_request(self, request):
+        for middleware in self.middlewares:
+            middleware().to_request(request)
+
+    def __apply_middleware_to_response(self, response):
+        for middleware in self.middlewares:
+            middleware().to_response(response)

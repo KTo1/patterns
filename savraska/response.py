@@ -13,7 +13,7 @@ class Response:
 
     def __set_base_headers(self):
         self.headers = {
-            ('Content-Type', 'text/html; charset=UTF-8')
+            'Content-Type': 'text/html; charset=UTF-8'
         }
 
     def __set_body(self, raw_body: str):

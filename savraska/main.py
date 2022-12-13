@@ -10,8 +10,9 @@ from savraska.response import Response
 
 class Savraska:
 
-    def __init__(self, urls: List[Url]):
+    def __init__(self, urls: List[Url], settings: dict):
         self.urls = urls
+        self.settings = settings
 
     def __call__(self, environ, start_response):
         """
@@ -26,7 +27,7 @@ class Savraska:
         request = self.__get_request(environ)
         response = self.__get_response(environ, view, request)
 
-        start_response(response.status_code, response.headers.items())
+        start_response(str(response.status_code), response.headers.items())
 
         return [response.body]
 
@@ -47,7 +48,7 @@ class Savraska:
         return self.__find_view(raw_url)()
 
     def __get_request(self, environ: dict) -> Request:
-        return Request(environ)
+        return Request(environ, self.settings)
 
     def __get_response(self, environ: dict, view: View, request: Request) -> Response:
         method = environ['REQUEST_METHOD'].lower()
@@ -55,6 +56,4 @@ class Savraska:
         if not hasattr(view, method):
             raise MethodNotAllowed
 
-        raw_response = getattr(view, method)(request)
-
-        return raw_response.encode('utf-8')
+        return getattr(view, method)(request)

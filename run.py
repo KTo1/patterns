@@ -1,3 +1,5 @@
+from waitress import serve
+
 from main import app
 
 # waitress-serve --listen=127.0.0.1:8000 main:app

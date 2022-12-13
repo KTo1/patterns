@@ -5,6 +5,7 @@ from savraska.urls import Url
 from savraska.exceptions import PageNotFound, MethodNotAllowed
 from savraska.view import View
 from savraska.request import Request
+from savraska.response import Response
 
 
 class Savraska:
@@ -25,9 +26,9 @@ class Savraska:
         request = self.__get_request(environ)
         response = self.__get_response(environ, view, request)
 
-        start_response('200 OK', [('Content-Type', 'text/html; charset=UTF-8')])
+        start_response(response.status_code, response.headers.items())
 
-        return [response]
+        return [response.body]
 
     def __prepare_url(self, url: str):
         return url if url.endswith('/') else f'{url}/'
@@ -48,7 +49,7 @@ class Savraska:
     def __get_request(self, environ: dict) -> Request:
         return Request(environ)
 
-    def __get_response(self, environ: dict, view: View, request: Request) -> str:
+    def __get_response(self, environ: dict, view: View, request: Request) -> Response:
         method = environ['REQUEST_METHOD'].lower()
 
         if not hasattr(view, method):

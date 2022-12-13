@@ -1,4 +1,3 @@
-from waitress import serve
 from savraska.main import Savraska
 from urls import urlpatterns
 

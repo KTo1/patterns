@@ -4,5 +4,5 @@ from views import HomePage, Math
 
 urlpatterns = [
     Url('^/$', HomePage),
-    Url('^/math/$', Math),
+    Url('^/math.*$', Math),
 ]

@@ -34,7 +34,6 @@ class Savraska:
 
     def __find_view(self, raw_url: str) -> Type[View]:
         url = self.__prepare_url(raw_url)
-        print(url)
         for path in self.urls:
             m = re.match(path.url, url)
             if m is not None:

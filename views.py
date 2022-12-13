@@ -17,4 +17,4 @@ class Math(View):
         if not second or not second[0].isnumeric():
             return 'second не задан'
 
-        return f'Sum: {int(first) + int(second)}'
+        return f'Sum: {int(first[0]) + int(second[0])}'

@@ -20,9 +20,6 @@ class Savraska:
         :param start_response: функция для ответа серверу
         """
 
-        # from pprint import pprint
-        # pprint(environ)
-
         view = self.__get_view(environ)
         request = self.__get_request(environ)
         response = self.__get_response(environ, view, request)

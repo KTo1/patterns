@@ -1,11 +1,15 @@
+from datetime import datetime
+
 from savraska.view import View
 from savraska.response import Response
-
+from savraska.templates import build_template
 
 class HomePage(View):
 
     def get(self, request, *args, **kwargs):
-        return Response(body='Home page')
+        context = {'time': str(datetime.now())}
+        body = build_template(request, context, 'home.html')
+        return Response(body=body)
 
 
 class Math(View):

@@ -4,6 +4,7 @@ from typing import List, Type
 from savraska.urls import Url
 from savraska.exceptions import PageNotFound, MethodNotAllowed
 from savraska.view import View
+from savraska.request import Request
 
 
 class Savraska:
@@ -20,22 +21,12 @@ class Savraska:
         from pprint import pprint
         pprint(environ)
 
-        raw_url = environ['PATH_INFO']
-        view = self.__find_view(raw_url)()
+        view = self.__get_view(environ)
+        request = self.__get_request(environ)
+        response = self.__get_response(environ, view, request)
 
-        method = environ['REQUEST_METHOD'].lower()
-
-        if not hasattr(view, method):
-            raise MethodNotAllowed
-
-        raw_response = getattr(view, method)(None)
-        response = raw_response.encode('utf-8')
-
-        print('response - >', response)
-
-        # сначала в функцию start_response передаем код ответа и заголовки
         start_response('200 OK', [('Content-Type', 'text/html')])
-        # возвращаем тело ответа в виде списка из bite
+
         return [response]
 
     def __prepare_url(self, url: str):
@@ -49,3 +40,20 @@ class Savraska:
                 return path.view
 
         raise PageNotFound
+
+    def __get_view(self, environ: dict) -> View:
+        raw_url = environ['PATH_INFO']
+        return self.__find_view(raw_url)()
+
+    def __get_request(self, environ: dict) -> Request:
+        return Request(environ)
+
+    def __get_response(self, environ: dict, view: View, request: Request) -> str:
+        method = environ['REQUEST_METHOD'].lower()
+
+        if not hasattr(view, method):
+            raise MethodNotAllowed
+
+        raw_response = getattr(view, method)(request)
+
+        return raw_response.encode('utf-8')

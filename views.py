@@ -19,7 +19,15 @@ class AboutPage(View):
         body = build_template(request, context, 'about.html')
         return Response(request, body=body)
 
+class MailPage(View):
+
+    def get(self, request, *args, **kwargs):
+        context = {'session_id': str(request.session_id)}
+        body = build_template(request, context, 'mail.html')
+        return Response(request, body=body)
+
 class Math(View):
+
     def get(self, request, *args, **kwargs):
         first = request.GET.get('first')
         if not first or not first[0].isnumeric():

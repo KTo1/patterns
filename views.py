@@ -1,30 +1,57 @@
 from datetime import datetime
 
+from savraska.request import Request
 from savraska.view import View
 from savraska.response import Response
 from savraska.templates import build_template
+from savraska.utils import EMail
+
 
 class HomePage(View):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         context = {'time': str(datetime.now())}
         body = build_template(request, context, 'home.html')
+
         return Response(request, body=body)
 
 
 class AboutPage(View):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         context = {'session_id': str(request.session_id)}
         body = build_template(request, context, 'about.html')
+
         return Response(request, body=body)
+
 
 class MailPage(View):
 
-    def get(self, request, *args, **kwargs):
-        context = {'session_id': str(request.session_id)}
+    def get(self, request: Request, *args, **kwargs):
+        context = {}
         body = build_template(request, context, 'mail.html')
+
         return Response(request, body=body)
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        name = name[0] if name else ''
+        email = email[0] if email else ''
+        subject = subject[0] if subject else ''
+        message = message[0] if message else ''
+
+        email = EMail(name, email, subject, message)
+        email.send()
+
+        context = {'info':'Сообщение успешно отправлено!'}
+        body = build_template(request, context, 'mail.html')
+
+        return Response(request, body=body)
+
 
 class Math(View):
 

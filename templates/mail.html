@@ -5,10 +5,15 @@
     <title>Написать нам</title>
 </head>
 <body>
-
+<div>
+    {% if info %}
+        <div> {{ info}} </div>
+    {% endif %}
+</div>
 <form action="" method="post">
   <input type="text" name="name" placeholder="Укажите ваше имя" required><br>
   <input type="text" name="email" placeholder="Укажите e-mail" required><br>
+  <input type="text" name="subject" placeholder="Тема письма" required><br>
   <textarea name="message"></textarea><br>
   <input type="submit" value="Отправить">
 </form>

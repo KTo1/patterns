@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from view import View
+from savraska.view import View
 from typing import Type
 
 

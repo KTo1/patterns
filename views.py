@@ -17,20 +17,6 @@ class IndexPage(View):
         return Response(request, body=body)
 
 
-class StaticPages(View):
-    def get(self, request: Request, *args, **kwargs):
-        assert request.settings.get('BASE_DIR')
-        assert request.settings.get('STATIC_DIR_NAME')
-
-        static_dir = os.path.join(request.settings.get('BASE_DIR'), request.settings.get('STATIC_DIR_NAME'))
-
-        static_path = os.path.join(static_dir, os.path.dirname(request.environ['PATH_INFO']))
-        with open('F:\Projects\Learning\GB\patterns\static\style\style.css', 'r') as f:
-            body = f.read()
-
-        return Response(request, body=body)
-
-
 class AboutPage(View):
 
     def get(self, request: Request, *args, **kwargs):
@@ -40,11 +26,11 @@ class AboutPage(View):
         return Response(request, body=body)
 
 
-class MailPage(View):
+class ContactPage(View):
 
     def get(self, request: Request, *args, **kwargs):
         context = {}
-        body = build_template(request, context, 'mail.html')
+        body = build_template(request, context, 'contact.html')
 
         return Response(request, body=body)
 
@@ -63,7 +49,7 @@ class MailPage(View):
         email.send()
 
         context = {'info':'Сообщение успешно отправлено!'}
-        body = build_template(request, context, 'mail.html')
+        body = build_template(request, context, 'contact.html')
 
         return Response(request, body=body)
 

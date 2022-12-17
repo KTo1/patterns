@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from savraska.request import Request
@@ -7,11 +8,25 @@ from savraska.templates import build_template
 from savraska.utils import EMail
 
 
-class HomePage(View):
+class IndexPage(View):
 
     def get(self, request: Request, *args, **kwargs):
         context = {'time': str(datetime.now())}
-        body = build_template(request, context, 'home.html')
+        body = build_template(request, context, 'index.html')
+
+        return Response(request, body=body)
+
+
+class StaticPages(View):
+    def get(self, request: Request, *args, **kwargs):
+        assert request.settings.get('BASE_DIR')
+        assert request.settings.get('STATIC_DIR_NAME')
+
+        static_dir = os.path.join(request.settings.get('BASE_DIR'), request.settings.get('STATIC_DIR_NAME'))
+
+        static_path = os.path.join(static_dir, os.path.dirname(request.environ['PATH_INFO']))
+        with open('F:\Projects\Learning\GB\patterns\static\style\style.css', 'r') as f:
+            body = f.read()
 
         return Response(request, body=body)
 

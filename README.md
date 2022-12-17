@@ -8,8 +8,10 @@ https://docs.pylonsproject.org/projects/waitress/en/latest/usage.html
 pip install waitress
 ).
 
-Есть две страницы:
-корневая и /about
+Работают страницы:
+корневая и /contact
+
+Почта не отправляется, пока складывается в каталог "savraska/mail" в формате json
 
 Как запустить:
 Или запустить run.py

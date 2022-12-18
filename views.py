@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from savraska.request import Request
@@ -7,11 +8,11 @@ from savraska.templates import build_template
 from savraska.utils import EMail
 
 
-class HomePage(View):
+class IndexPage(View):
 
     def get(self, request: Request, *args, **kwargs):
         context = {'time': str(datetime.now())}
-        body = build_template(request, context, 'home.html')
+        body = build_template(request, context, 'index.html')
 
         return Response(request, body=body)
 
@@ -25,11 +26,11 @@ class AboutPage(View):
         return Response(request, body=body)
 
 
-class MailPage(View):
+class ContactPage(View):
 
     def get(self, request: Request, *args, **kwargs):
         context = {}
-        body = build_template(request, context, 'mail.html')
+        body = build_template(request, context, 'contact.html')
 
         return Response(request, body=body)
 
@@ -48,7 +49,7 @@ class MailPage(View):
         email.send()
 
         context = {'info':'Сообщение успешно отправлено!'}
-        body = build_template(request, context, 'mail.html')
+        body = build_template(request, context, 'contact.html')
 
         return Response(request, body=body)
 

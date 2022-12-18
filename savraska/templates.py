@@ -1,6 +1,5 @@
 import os
-import re
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
 
 from savraska.request import Request
 
@@ -8,10 +7,11 @@ from savraska.request import Request
 class Engine:
 
     def __init__(self, base_dir: str, template_dir: str):
-        self.template_dir = os.path.join(base_dir, template_dir)
+        self.template_dir = template_dir
+        self.full_template_dir = os.path.join(base_dir, template_dir)
 
     def as_string(self, template_name: str):
-        template_path = os.path.join(self.template_dir, template_name)
+        template_path = os.path.join(self.full_template_dir, template_name)
 
         if not os.path.isfile(template_path):
             raise Exception(f'{template_name} is not file')
@@ -20,7 +20,7 @@ class Engine:
             return f.read()
 
     def build(self, context: dict, template_name: str) -> str:
-        template = Template(self.as_string(template_name))
+        template = Environment(loader=FileSystemLoader(self.template_dir)).from_string(self.as_string(template_name))
         return template.render(**context)
 
 

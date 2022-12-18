@@ -6,3 +6,7 @@ class PageNotFound(Exception):
 class MethodNotAllowed(Exception):
     code = 405
     text = 'Неподдерживаемый HTTP метод'
+
+
+class UserException(Exception):
+    text = ''

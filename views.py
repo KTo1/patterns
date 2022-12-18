@@ -34,7 +34,7 @@ class ContactPage(View):
         context = {}
         body = build_template(request, context, 'contact.html')
 
-        savraska_log.debug(f'Переход к главной странице, {str(request)}')
+        savraska_log.debug(f'Переход к странице контактов, {str(request)}')
 
         return Response(request, body=body)
 
@@ -54,6 +54,15 @@ class ContactPage(View):
 
         context = {'info':'Сообщение успешно отправлено!'}
         body = build_template(request, context, 'contact.html')
+
+        return Response(request, body=body)
+
+
+class CoursePage(View):
+
+    def get(self, request: Request, *args, **kwargs):
+        context = {}
+        body = build_template(request, context, 'courses.html')
 
         return Response(request, body=body)
 

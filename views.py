@@ -19,11 +19,11 @@ class IndexPage(View):
         return Response(request, body=body)
 
 
-class AboutPage(View):
+class SchedulesPage(View):
 
     def get(self, request: Request, *args, **kwargs):
-        context = {'session_id': str(request.session_id)}
-        body = build_template(request, context, 'about.html')
+        context = {}
+        body = build_template(request, context, 'Schedules.html')
 
         return Response(request, body=body)
 

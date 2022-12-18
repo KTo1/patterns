@@ -1,9 +1,9 @@
 from savraska.urls import Url
-from views import IndexPage, Math, AboutPage, ContactPage
+from views import IndexPage, Math, ContactPage, SchedulesPage
 
 urlpatterns = [
     Url('^/$', IndexPage),
     Url('^/math.*$', Math),
-    Url('^/about/$', AboutPage),
     Url('^/contact/$', ContactPage),
+    Url('^/schedules/$', SchedulesPage),
 ]

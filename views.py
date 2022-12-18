@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 from savraska.request import Request
@@ -6,6 +5,7 @@ from savraska.view import View
 from savraska.response import Response
 from savraska.templates import build_template
 from savraska.utils import EMail
+from savraska.logs import savraska_log
 
 
 class IndexPage(View):
@@ -13,6 +13,8 @@ class IndexPage(View):
     def get(self, request: Request, *args, **kwargs):
         context = {'time': str(datetime.now())}
         body = build_template(request, context, 'index.html')
+
+        savraska_log.debug(f'Переход к главной странице, {str(request)}')
 
         return Response(request, body=body)
 
@@ -31,6 +33,8 @@ class ContactPage(View):
     def get(self, request: Request, *args, **kwargs):
         context = {}
         body = build_template(request, context, 'contact.html')
+
+        savraska_log.debug(f'Переход к главной странице, {str(request)}')
 
         return Response(request, body=body)
 

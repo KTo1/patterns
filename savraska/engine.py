@@ -102,8 +102,26 @@ class Engine:
 
         return course
 
+    def get_category_by_id(self, category_id):
+        for category in self.categories:
+            if str(category.id) == category_id:
+                return category
+        return None
+
+    def get_course_by_name(self, name):
+        for course in self.courses:
+            if course.name == name:
+                return course
+        return None
+
+    def get_courses_by_category(self, category):
+        return  category.courses
+
     def add_category(self, category):
         self.categories.append(category)
+
+    def add_course(self, course):
+        self.courses.append(course)
 
 
 engine = Engine()

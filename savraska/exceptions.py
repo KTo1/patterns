@@ -10,3 +10,11 @@ class MethodNotAllowed(Exception):
 
 class UserException(Exception):
     text = ''
+
+
+class InvalidGETException(Exception):
+    text = 'Неверные параметры GET'
+
+
+class InvalidPOSTException(Exception):
+    text = 'Неверные параметры POST'

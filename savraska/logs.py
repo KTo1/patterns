@@ -6,8 +6,12 @@ savraska_log = logging.getLogger('savraska.main')
 formatter = logging.Formatter("<%(asctime)s> <%(levelname)s> <%(module)s> <%(message)s>")
 
 logs_dir = 'logs'
+
 file_name = os.path.dirname(os.path.abspath(__file__))
 file_name = os.path.join(file_name, logs_dir)
+if not os.path.isdir(file_name):
+     os.mkdir(file_name)
+
 file_name = os.path.join(file_name, 'savraska.log')
 
 file_hand = logging.FileHandler(file_name, encoding='utf-8')

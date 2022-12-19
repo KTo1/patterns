@@ -101,3 +101,9 @@ class Engine:
         category.course_add(course)
 
         return course
+
+    def add_category(self, category):
+        self.categories.append(category)
+
+
+engine = Engine()

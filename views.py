@@ -6,6 +6,7 @@ from savraska.response import Response
 from savraska.templates import build_template
 from savraska.utils import EMail
 from savraska.logs import savraska_log
+from savraska.engine import engine
 
 
 class IndexPage(View):
@@ -61,11 +62,24 @@ class ContactPage(View):
 class CoursePage(View):
 
     def get(self, request: Request, *args, **kwargs):
-        context = {}
+        context = {'categories': engine.categories}
         body = build_template(request, context, 'courses.html')
 
         return Response(request, body=body)
 
+
+class CourseAddCategoryPage(View):
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+
+        if request.POST:
+            new_category = engine.create_category(request.POST['name'])
+            engine.add_category(new_category)
+
+        context = {'categories': engine.categories}
+        body = build_template(request, context, 'courses.html')
+
+        return Response(request, body=body)
 
 class Math(View):
 

@@ -2,7 +2,6 @@ import os
 
 from savraska.main import Savraska
 from urls import urlpatterns
-
 from savraska.middleware import middlewares
 
 
@@ -16,5 +15,5 @@ settings = {
 app = Savraska(
     urls=urlpatterns,
     settings=settings,
-    middlewares=middlewares
+    middlewares=middlewares,
 )

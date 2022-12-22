@@ -6,3 +6,15 @@ class PageNotFound(Exception):
 class MethodNotAllowed(Exception):
     code = 405
     text = 'Неподдерживаемый HTTP метод'
+
+
+class UserException(Exception):
+    text = ''
+
+
+class InvalidGETException(Exception):
+    text = 'Неверные параметры GET'
+
+
+class InvalidPOSTException(Exception):
+    text = 'Неверные параметры POST'

@@ -1,10 +1,11 @@
 from savraska.urls import Url
-from views import (IndexPage, Math, ContactPage, SchedulesPage, CoursePage, CourseAddCategoryPage, CourseCategoryPage,
+from views import (IndexPage, ContactPage, SchedulesPage, CoursePage, CourseAddCategoryPage, CourseCategoryPage,
     CourseAddPage, CourseCopyPage)
+
 
 urlpatterns = [
     Url('^/$', IndexPage),
-    Url('^/math.*$', Math),
+    # Url('^/math.*$', Math),
     Url('^/contact/$', ContactPage),
     Url('^/schedules/$', SchedulesPage),
     Url('^/courses/$', CoursePage),

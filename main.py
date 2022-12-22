@@ -1,7 +1,8 @@
 import os
 
 from savraska.main import Savraska
-from urls import urlpatterns
+# from urls import urlpatterns
+from views import urlpatterns
 from savraska.middleware import middlewares
 
 

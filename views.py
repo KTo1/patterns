@@ -8,10 +8,16 @@ from savraska.templates import build_template
 from savraska.utils import EMail
 from savraska.logs import savraska_log
 from savraska.engine import engine
+from savraska.decorators import AppRoute, Debug
+from savraska.urls import Url
+
+
+urlpatterns = []
 
 
 class IndexPage(View):
 
+    @Debug()
     def get(self, request: Request, *args, **kwargs):
         context = {'time': str(datetime.now())}
         body = build_template(request, context, 'index.html')
@@ -178,6 +184,7 @@ class CourseAddCategoryPage(View):
         return Response(request, body=body)
 
 
+@AppRoute(urlpatterns, '^/math.*$')
 class Math(View):
 
     def get(self, request, *args, **kwargs):
@@ -190,3 +197,16 @@ class Math(View):
             return Response(request, body='second не задан')
 
         return Response(request, body=f'Sum: {int(first[0]) + int(second[0])}')
+
+
+urlpatterns.extend([
+    Url('^/$', IndexPage),
+    # Url('^/math.*$', Math),
+    Url('^/contact/$', ContactPage),
+    Url('^/schedules/$', SchedulesPage),
+    Url('^/courses/$', CoursePage),
+    Url('^/courses-category/$', CourseCategoryPage),
+    Url('^/add-category/$', CourseAddCategoryPage),
+    Url('^/add-course/$', CourseAddPage),
+    Url('^/copy-course/$', CourseCopyPage),
+])

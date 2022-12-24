@@ -1,6 +1,6 @@
 import os
 
-from savraska.main import Savraska
+from savraska.main import Savraska, SavraskaFake, SavraskaDebug
 # from urls import urlpatterns
 from views import urlpatterns
 from savraska.middleware import middlewares
@@ -14,6 +14,18 @@ settings = {
 
 
 app = Savraska(
+    urls=urlpatterns,
+    settings=settings,
+    middlewares=middlewares,
+)
+
+app_fake = SavraskaFake(
+    urls=urlpatterns,
+    settings=settings,
+    middlewares=middlewares,
+)
+
+app_debug = SavraskaDebug(
     urls=urlpatterns,
     settings=settings,
     middlewares=middlewares,

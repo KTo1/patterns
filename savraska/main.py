@@ -67,3 +67,31 @@ class Savraska:
     def __apply_middleware_to_response(self, response):
         for middleware in self.middlewares:
             middleware().to_response(response)
+
+
+class SavraskaFake(Savraska):
+    """ Фейковое приложение, всегда вощвращает 200 ок"""
+
+    def __call__(self, environ, start_response):
+        """
+        :param environ: словарь данных от сервера
+        :param start_response: функция для ответа серверу
+        """
+
+        start_response('200 OK', [('Content-Type', 'text/html')])
+
+        return [b'Hello from Fake']
+
+
+class SavraskaDebug(Savraska):
+    """ Отладочное приложение, выводит параметры запроса в консоль """
+
+    def __call__(self, environ, start_response):
+        """
+        :param environ: словарь данных от сервера
+        :param start_response: функция для ответа серверу
+        """
+        print('DEBUG MODE')
+        print(environ)
+
+        return super(SavraskaDebug, self).__call__(environ, start_response)

@@ -70,7 +70,7 @@ class Savraska:
 
 
 class SavraskaFake(Savraska):
-    """ Фейковое приложение, всегда вощвращает 200 ок"""
+    """ Фейковое приложение, всегда возвращает 200 ок"""
 
     def __call__(self, environ, start_response):
         """
@@ -91,6 +91,7 @@ class SavraskaDebug(Savraska):
         :param environ: словарь данных от сервера
         :param start_response: функция для ответа серверу
         """
+
         print('DEBUG MODE')
         print(environ)
 

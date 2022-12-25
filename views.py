@@ -69,7 +69,7 @@ class ContactPage(View):
 class CoursePage(View):
 
     def get(self, request: Request, *args, **kwargs):
-        context = {'categories': engine.categories}
+        context = {'categories': engine.get_categories()}
         body = build_template(request, context, 'courses.html')
 
         return Response(request, body=body)
@@ -142,7 +142,7 @@ class CourseAddPage(View):
         else:
             raise InvalidGETException
 
-        context = {'categories': engine.categories, 'category': category}
+        context = {'category': category}
         body = build_template(request, context, 'courses-course-add.html')
 
         return Response(request, body=body)
@@ -167,7 +167,10 @@ class CourseAddPage(View):
 class CourseAddCategoryPage(View):
 
     def get(self, request: Request, *args, **kwargs):
-        context = {'categories': engine.categories}
+        parent_category_id = None
+        if request.GET:
+            parent_category_id = request.GET['category_id'][0]
+        context = {'parent_category_id': parent_category_id}
         body = build_template(request, context, 'courses-cat-add.html')
 
         return Response(request, body=body)
@@ -175,10 +178,17 @@ class CourseAddCategoryPage(View):
     def post(self, request: Request, *args, **kwargs) -> Response:
 
         if request.POST:
-            new_category = engine.create_category(request.POST['name'][0])
-            engine.add_category(new_category)
+            parent_category_id = request.POST.get('parent_category_id')
+            parent_category = None
+            if parent_category_id:
+                parent_category_id = parent_category_id[0]
+                parent_category = engine.get_category_by_id(parent_category_id)
 
-        context = {'categories': engine.categories}
+            new_category = engine.create_category(request.POST['name'][0], parent_category)
+            if not parent_category:
+                engine.add_category(new_category)
+
+        context = {'categories': engine.get_categories()}
         body = build_template(request, context, 'courses.html')
 
         return Response(request, body=body)

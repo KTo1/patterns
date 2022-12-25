@@ -1,24 +1,27 @@
 {% extends 'base.html' %}
 {% block menu %}
-        <ul id="menu">
-          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
-          <li><a href="/">Главная</a></li>
-          <li class="selected"><a href="/courses">Курсы</a></li>
-          <li><a href="/schedules">Расписания</a></li>
-          <li><a href="/contact">Связаться</a></li>
-        </ul>
+<ul id="menu">
+    <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+    <li><a href="/">Главная</a></li>
+    <li class="selected"><a href="/courses">Курсы</a></li>
+    <li><a href="/schedules">Расписания</a></li>
+    <li><a href="/contact">Связаться</a></li>
+</ul>
 {% endblock %}
 {% block content %}
-      <!-- insert the page content here -->
-      <h1>Доступные курсы</h1>
-      <h4><a href="/add-category/">Добавить категорию</a></h4>
+<!-- insert the page content here -->
+<h1>Доступные курсы</h1>
+<h4><a href="/add-category/">Добавить категорию</a></h4>
 
-      {% if categories %}
-          <h4>Список курсов по категориям:</h4>
-          <ul>
-            {% for category in categories %}
-              <li>{{ category.name }} ({{ category.courses|length }}) <a href="/courses-category/?id={{ category.id }}"> показать курсы </a></li>
-            {% endfor %}
-          </ul>
-     {% endif %}
+{% if categories %}
+<h4>Список курсов по категориям:</h4>
+<ul>
+    {% for category_dict in categories %}
+        {% set category = category_dict.category %}
+        {% set level = category_dict.level %}
+
+        <li>{{ level }} {{ category.name }} ({{ category.courses|length }}) (<a href="/courses-category/?id={{ category.id }}">Показать курсы</a>) (<a href="/add-category/?category_id={{ category.id }}">Добавить подкатегорию</a>)</li>
+    {% endfor %}
+</ul>
+{% endif %}
 {% endblock %}

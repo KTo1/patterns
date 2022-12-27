@@ -209,11 +209,19 @@ class Math(View):
         return Response(request, body=f'Sum: {int(first[0]) + int(second[0])}')
 
 
+class StudentsPage(View):
+    def get(self, request: Request, *args, **kwargs):
+        context = {'students': engine.get_students()}
+        body = build_template(request, context, 'students.html')
+
+        return Response(request, body=body)
+
 urlpatterns.extend([
     Url('^/$', IndexPage),
     # Url('^/math.*$', Math),
     Url('^/contact/$', ContactPage),
     Url('^/schedules/$', SchedulesPage),
+    Url('^/students/$', StudentsPage),
     Url('^/courses/$', CoursePage),
     Url('^/courses-category/$', CourseCategoryPage),
     Url('^/add-category/$', CourseAddCategoryPage),

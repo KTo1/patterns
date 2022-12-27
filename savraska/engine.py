@@ -94,6 +94,9 @@ class Engine:
         self.courses = []
         self.categories = []
 
+    def get_students(self):
+        return self.students
+
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
             if category.categories:

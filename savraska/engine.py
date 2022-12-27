@@ -1,4 +1,5 @@
 from copy import deepcopy
+from operator import itemgetter
 from uuid import uuid4
 
 
@@ -67,6 +68,9 @@ class Category:
         self.name = name
         self.parent = parent_category
         self.courses = []
+        self.categories = []
+        if parent_category:
+            parent_category.categories.append(self)
 
     def course_add(self, course):
         self.courses.append(course)
@@ -77,6 +81,9 @@ class Category:
             result += self.parent.course_count()
         return result
 
+    def __str__(self):
+        return f'{self.name}: {self.id}'
+
 
 class Engine:
     """ Интерфейс проекта """
@@ -86,6 +93,26 @@ class Engine:
         self.students = []
         self.courses = []
         self.categories = []
+
+    def __get_categories_rec(self, categories, category_list, level):
+        for category in categories:
+            if category.categories:
+                self.__get_categories_rec(category.categories, category_list, level + 2)
+                category_list.append({'category': category, 'level': level, 'id': category.id})
+            else:
+                category_list.append({'category': category, 'level': level, 'id': category.id})
+
+    def get_categories(self):
+        category_list = []
+        categories = self.categories
+
+        self.__get_categories_rec(categories, category_list, level=1)
+
+        # category_list = sorted(category_list, key=itemgetter('order', 'level'))
+        category_list = category_list[::-1]
+        for item in category_list:
+            item['level'] = '_' * item['level']
+        return category_list
 
     @staticmethod
     def create_user(user_type):
@@ -103,9 +130,9 @@ class Engine:
         return course
 
     def get_category_by_id(self, category_id):
-        for category in self.categories:
-            if str(category.id) == category_id:
-                return category
+        for category in self.get_categories():
+            if str(category['id']) == category_id:
+                return category['category']
         return None
 
     def get_course_by_name(self, name):

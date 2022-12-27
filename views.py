@@ -209,6 +209,7 @@ class Math(View):
         return Response(request, body=f'Sum: {int(first[0]) + int(second[0])}')
 
 
+@AppRoute(urlpatterns, '^/students/$')
 class StudentsPage(View):
     def get(self, request: Request, *args, **kwargs):
         context = {'students': engine.get_students()}
@@ -216,12 +217,38 @@ class StudentsPage(View):
 
         return Response(request, body=body)
 
+
+@AppRoute(urlpatterns, '^/students-list/$')
+class StudentsListPage(View):
+    def get(self, request: Request, *args, **kwargs):
+        context = {'students': engine.get_students()}
+        body = build_template(request, context, 'students-list.html')
+
+        return Response(request, body=body)
+
+
+@AppRoute(urlpatterns, '^/students-add/$')
+class StudentsAdd(View):
+    def get(self, request: Request, *args, **kwargs):
+        context = {'students': engine.get_students()}
+        body = build_template(request, context, 'students-add.html')
+
+        return Response(request, body=body)
+
+
+@AppRoute(urlpatterns, '^/students-bind/$')
+class StudentsBindPage(View):
+    def get(self, request: Request, *args, **kwargs):
+        context = {'students': engine.get_students()}
+        body = build_template(request, context, 'students-bind.html')
+
+        return Response(request, body=body)
+
+
 urlpatterns.extend([
     Url('^/$', IndexPage),
-    # Url('^/math.*$', Math),
     Url('^/contact/$', ContactPage),
     Url('^/schedules/$', SchedulesPage),
-    Url('^/students/$', StudentsPage),
     Url('^/courses/$', CoursePage),
     Url('^/courses-category/$', CourseCategoryPage),
     Url('^/add-category/$', CourseAddCategoryPage),

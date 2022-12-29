@@ -212,7 +212,7 @@ class Math(View):
 @AppRoute(urlpatterns, '^/students/$')
 class StudentsPage(View):
     def get(self, request: Request, *args, **kwargs):
-        context = {'students': engine.get_students()}
+        context = {}
         body = build_template(request, context, 'students.html')
 
         return Response(request, body=body)
@@ -230,20 +230,36 @@ class StudentsListPage(View):
 @AppRoute(urlpatterns, '^/students-add/$')
 class StudentsAdd(View):
     def get(self, request: Request, *args, **kwargs):
-        context = {'students': engine.get_students()}
+        context = {}
         body = build_template(request, context, 'students-add.html')
 
         return Response(request, body=body)
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+
+        if request.POST:
+            student_name = request.POST.get('name')[0]
+            student = engine.create_user('student', student_name)
+            engine.add_student(student)
+
+        context = {}
+        body = build_template(request, context, 'students.html')
+
+        return Response(request, body=body)
+
 
 
 @AppRoute(urlpatterns, '^/students-bind/$')
 class StudentsBindPage(View):
     def get(self, request: Request, *args, **kwargs):
-        context = {'students': engine.get_students()}
+        context = {'students': engine.get_students(), 'courses': engine.get_courses()}
         body = build_template(request, context, 'students-bind.html')
 
         return Response(request, body=body)
 
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        pass
+    
 
 urlpatterns.extend([
     Url('^/$', IndexPage),

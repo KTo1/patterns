@@ -1,10 +1,10 @@
 from copy import deepcopy
-from operator import itemgetter
 from uuid import uuid4
 
 
 class User:
-    pass
+    def __init__(self, name: str):
+        self.name = name
 
 
 class Teacher(User):
@@ -12,7 +12,9 @@ class Teacher(User):
 
 
 class Student(User):
-    pass
+    def __init__(self, name: str):
+        super(Student, self).__init__(name)
+        self.courses = []
 
 
 class UserFactory:
@@ -24,8 +26,8 @@ class UserFactory:
     }
 
     @classmethod
-    def create(cls, user_type):
-        return cls.user_types[user_type]()
+    def create(cls, user_type: str, name: str):
+        return cls.user_types[user_type](name)
 
 
 class CoursePrototype:
@@ -97,6 +99,9 @@ class Engine:
     def get_students(self):
         return self.students
 
+    def get_courses(self):
+        return self.courses
+
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
             if category.categories:
@@ -111,15 +116,14 @@ class Engine:
 
         self.__get_categories_rec(categories, category_list, level=1)
 
-        # category_list = sorted(category_list, key=itemgetter('order', 'level'))
         category_list = category_list[::-1]
         for item in category_list:
             item['level'] = '_' * item['level']
         return category_list
 
     @staticmethod
-    def create_user(user_type):
-        return UserFactory.create(user_type)
+    def create_user(user_type, name):
+        return UserFactory.create(user_type, name)
 
     @staticmethod
     def create_category(name, parent_category=None):
@@ -152,6 +156,9 @@ class Engine:
 
     def add_course(self, course):
         self.courses.append(course)
+
+    def add_student(self, student: Student):
+        self.students.append(student)
 
 
 engine = Engine()

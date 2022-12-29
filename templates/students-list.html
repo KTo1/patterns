@@ -12,8 +12,10 @@
 {% block content %}
       <!-- insert the page content here -->
       <h1>Студенты</h1>
-      <h4><a href="/students-list/">Список студентов</a></h4>
-      <h4><a href="/students-add/">Новый студент</a></h4>
-      <h4><a href="/students-bind/">Записать студента на курс</a></h4>
+      <h4><a href="/students">Назад</a></h4>
+
+        {% for student in students %}
+            <li>{{ student.name }} (<a href="/students-bind">Записать на курс</a>)</li>
+        {% endfor %}
 
 {% endblock %}

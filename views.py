@@ -262,9 +262,10 @@ class StudentsBindPage(View):
             student_id = request.POST.get('student_id')[0]
             course_id = request.POST.get('course_id')[0]
 
+            student = engine.get_student_by_id(student_id)
+            course = engine.get_course_by_id(course_id)
 
-            student = engine.create_user('student', student_name)
-            engine.add_student(student)
+            course.add_student(student)
 
         context = {}
         body = build_template(request, context, 'students.html')

@@ -44,6 +44,11 @@ class Course(CoursePrototype):
         self.id = uuid4()
         self.name = name
         self.category = category
+        self.students = []
+
+    def add_student(self, student: Student):
+        self.students.append(student)
+        student.courses.append(self)
 
 
 class InteractiveCourse(Course):

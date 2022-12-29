@@ -16,14 +16,14 @@
     <form method="post">
         <div class="form_settings">
             <p><span>Выберите студента</span>
-                <select size="3" name="student_id">
+                <select size="9" name="student_id">
                     {% for item in students %}
                         <option value="{{item.id}}">{{item.name}}</option>
                     {% endfor %}
                 </select>
             </p>
             <p><span>Выберите курс</span>
-                <select size="3" name="course_id">
+                <select size="9" name="course_id">
                     {% for item in courses %}
                         <option value="{{item.id}}">{{item.name}}</option>
                     {% endfor %}

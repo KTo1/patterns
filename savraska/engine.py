@@ -4,6 +4,7 @@ from uuid import uuid4
 
 class User:
     def __init__(self, name: str):
+        self.id = uuid4()
         self.name = name
 
 
@@ -40,6 +41,7 @@ class CoursePrototype:
 class Course(CoursePrototype):
 
     def __init__(self, name, category):
+        self.id = uuid4()
         self.name = name
         self.category = category
 
@@ -142,10 +144,16 @@ class Engine:
                 return category['category']
         return None
 
-    def get_course_by_name(self, name):
+    def get_course_by_id(self, course_id: str):
         for course in self.courses:
-            if course.name == name:
+            if str(course.id) == course_id:
                 return course
+        return None
+
+    def get_student_by_id(self, student_id: str):
+        for student in self.students:
+            if str(student.id) == student_id:
+                return student
         return None
 
     def get_courses_by_category(self, category):

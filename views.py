@@ -78,6 +78,7 @@ class CoursePage(View):
 class CourseCategoryPage(View):
     def get(self, request: Request, *args, **kwargs):
         courses = []
+        category = ''
         if request.GET:
             category_id = request.GET['id'][0]
             category = engine.get_category_by_id(category_id)
@@ -94,15 +95,15 @@ class CourseCopyPage(View):
     def get(self, request: Request, *args, **kwargs):
 
         if request.GET:
-            course_name = request.GET['name'][0]
+            course_id = request.GET['course_id'][0]
             category_id = request.GET['category_id'][0]
 
             category = engine.get_category_by_id(category_id)
-
+            course = engine.get_course_by_id(course_id)
         else:
             raise InvalidGETException
 
-        context = {'course_name': course_name, 'category': category}
+        context = {'course': course, 'category': category}
         body = build_template(request, context, 'courses-course-copy.html')
 
         return Response(request, body=body)
@@ -112,10 +113,10 @@ class CourseCopyPage(View):
         if request.POST:
             category_id = request.POST['category_id'][0]
             name = request.POST['name'][0]
-            source_course_name = request.POST['source_course_name'][0]
+            source_course_id = request.POST['source_course_id'][0]
 
             category = engine.get_category_by_id(category_id)
-            source_course = engine.get_course_by_name(source_course_name)
+            source_course = engine.get_course_by_id(source_course_id)
             new_course = source_course.clone()
             new_course.name = name
 
@@ -248,7 +249,6 @@ class StudentsAdd(View):
         return Response(request, body=body)
 
 
-
 @AppRoute(urlpatterns, '^/students-bind/$')
 class StudentsBindPage(View):
     def get(self, request: Request, *args, **kwargs):
@@ -258,8 +258,19 @@ class StudentsBindPage(View):
         return Response(request, body=body)
 
     def post(self, request: Request, *args, **kwargs) -> Response:
-        pass
-    
+        if request.POST:
+            student_id = request.POST.get('student_id')[0]
+            course_id = request.POST.get('course_id')[0]
+
+
+            student = engine.create_user('student', student_name)
+            engine.add_student(student)
+
+        context = {}
+        body = build_template(request, context, 'students.html')
+
+        return Response(request, body=body)
+
 
 urlpatterns.extend([
     Url('^/$', IndexPage),

@@ -19,7 +19,7 @@
           <h4>Список курсов по категории "{{ category.name }}":</h4>
           <ul>
             {% for course in courses %}
-              <li>{{ course.name }} ( <a href="/copy-course/?name={{ course.name }}&category_id={{ category.id }}">скопировать</a> )</li>
+              <li>{{ course.name }} ( <a href="/copy-course/?course_id={{ course.id }}&category_id={{ category.id }}">скопировать</a> )</li>
             {% endfor %}
           </ul>
      {% endif %}

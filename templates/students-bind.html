@@ -16,22 +16,21 @@
     <form method="post">
         <div class="form_settings">
             <p><span>Выберите студента</span>
-                <select size="3" name="student_name">
+                <select size="3" name="student_id">
                     {% for item in students %}
-                        <option value="{{item.name}}">{{item.name}}</option>
+                        <option value="{{item.id}}">{{item.name}}</option>
                     {% endfor %}
                 </select>
             </p>
             <p><span>Выберите курс</span>
-            <select size="3" name="course_name">
-                {% for item in courses %}
-                    <option value="{{item.name}}">{{item.name}}</option>
-                {% endfor %}
-            </select>
+                <select size="3" name="course_id">
+                    {% for item in courses %}
+                        <option value="{{item.id}}">{{item.name}}</option>
+                    {% endfor %}
+                </select>
             </p>
             <p style="padding-top: 15px"><span>&nbsp;</span><input class="submit" type="submit" name="contact_submitted" value="Записать" /></p>
         </div>
     </form>
-
 
 {% endblock %}

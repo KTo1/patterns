@@ -21,8 +21,10 @@ class Session(BaseMiddleWare):
         if not cookie:
             return
 
-        session_id = parse_qs(cookie)['session_id'][0]
-        request.extra['session_id'] = session_id
+        parse_cookie = parse_qs(cookie)
+        if parse_cookie.get('session_id'):
+            session_id = parse_cookie['session_id'][0]
+            request.extra['session_id'] = session_id
 
     def to_response(self, response: Response):
         if not response.request.session_id:

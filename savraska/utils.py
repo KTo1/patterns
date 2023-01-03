@@ -2,6 +2,37 @@ import os
 import json
 
 from datetime import datetime
+from typing import List, Type
+
+
+class Subject:
+    def __init__(self):
+        self.observers: List[Observer] = []
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def remove_observer(self, observer):
+        self.observers.remove(observer)
+
+    def notify(self):
+        for item in self.observers:
+            item.update(subject=self)
+
+
+class Observer:
+    def update(self, subject: Subject):
+        pass
+
+
+class SMSNotifier(Observer):
+    def update(self, subject: Subject):
+        print('SMS -> к нам присоединился ,)')
+
+
+class EMAILNotifier(Observer):
+    def update(self, subject: Subject):
+        pass
 
 
 class EMail:

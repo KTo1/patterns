@@ -5,7 +5,7 @@ from savraska.request import Request
 from savraska.view import View
 from savraska.response import Response
 from savraska.templates import build_template
-from savraska.utils import EMail
+from savraska.utils import EMail, SMSNotifier, EMAILNotifier
 from savraska.logs import savraska_log
 from savraska.engine import engine
 from savraska.decorators import AppRoute, Debug
@@ -154,6 +154,9 @@ class CourseAddPage(View):
             category_id = request.POST['category_id'][0]
             category = engine.get_category_by_id(category_id)
             new_course = engine.create_course('record', request.POST['name'][0], category)
+            new_course.add_observer(SMSNotifier)
+            new_course.add_observer(EMAILNotifier)
+
             engine.add_course(new_course)
             courses = engine.get_courses_by_category(category)
         else:

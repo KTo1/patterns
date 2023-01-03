@@ -154,8 +154,8 @@ class CourseAddPage(View):
             category_id = request.POST['category_id'][0]
             category = engine.get_category_by_id(category_id)
             new_course = engine.create_course('record', request.POST['name'][0], category)
-            new_course.add_observer(SMSNotifier)
-            new_course.add_observer(EMAILNotifier)
+            new_course.add_observer(SMSNotifier())
+            new_course.add_observer(EMAILNotifier())
 
             engine.add_course(new_course)
             courses = engine.get_courses_by_category(category)

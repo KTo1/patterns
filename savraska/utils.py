@@ -2,7 +2,7 @@ import os
 import json
 
 from datetime import datetime
-from typing import List, Type
+from typing import List
 
 
 class Subject:
@@ -27,12 +27,12 @@ class Observer:
 
 class SMSNotifier(Observer):
     def update(self, subject: Subject):
-        print('SMS -> к нам присоединился ,)')
+        print('SMS -> к нам присоединился ,)', subject.students[-1].name)
 
 
 class EMAILNotifier(Observer):
     def update(self, subject: Subject):
-        pass
+        print('EMAIL -> к нам присоединился ,)', subject.students[-1].name)
 
 
 class EMail:

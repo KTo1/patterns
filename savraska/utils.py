@@ -42,6 +42,28 @@ class EMAILNotifier(Observer):
 # endregion
 
 
+class JsonAdapter:
+    def __init__(self, elem):
+        self.elem = elem
+
+    def to_json(self):
+        return json.dumps({'name': self.elem.name}, ensure_ascii=False, sort_keys=True, indent=4)
+
+
+class JsonSerializer:
+    """ Сериализатор JSON """
+
+    @staticmethod
+    def save(obj):
+        if isinstance(obj, list):
+            return json.dumps([JsonAdapter(elem).to_json() for elem in obj], ensure_ascii=False, sort_keys=True, indent=4)
+        else:
+            return json.dumps(JsonAdapter(obj).to_json(), ensure_ascii=False, sort_keys=True, indent=4)
+
+    @staticmethod
+    def load(data):
+        return json.loads(data)
+
 class EMail:
     """ Класс для работы с почтой """
 

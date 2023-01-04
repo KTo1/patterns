@@ -5,7 +5,7 @@ from savraska.request import Request
 from savraska.view import View
 from savraska.response import Response
 from savraska.templates import build_template
-from savraska.utils import EMail, SMSNotifier, EMAILNotifier
+from savraska.utils import EMail, SMSNotifier, EMAILNotifier, JsonSerializer
 from savraska.logs import savraska_log, Loger
 from savraska.engine import engine
 from savraska.decorators import AppRoute, Debug
@@ -278,6 +278,12 @@ class StudentsBindPage(View):
         body = build_template(request, context, 'students.html')
 
         return Response(request, body=body)
+
+
+@AppRoute(urlpatterns, '^/api-course/$')
+class CourseApi(View):
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return Response(request, body=JsonSerializer.save(engine.courses))
 
 
 urlpatterns.extend([

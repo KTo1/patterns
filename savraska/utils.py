@@ -5,6 +5,10 @@ from datetime import datetime
 from typing import List
 
 
+# region Поведенческий паттерн наблюдатель
+# Subject - то за чем наблюдают (сейчас курсы)
+# Observer - те кто наблюдают
+
 class Subject:
     def __init__(self):
         self.observers: List[Observer] = []
@@ -35,8 +39,11 @@ class EMAILNotifier(Observer):
         print('EMAIL -> к нам присоединился ,)', subject.students[-1].name)
 
 
+# endregion
+
+
 class EMail:
-    """ Класс для работы с почтой"""
+    """ Класс для работы с почтой """
 
     def __init__(self, name: str, address: str, subject: str, message: str):
         self.__name = name

@@ -6,10 +6,13 @@ from savraska.view import View
 from savraska.response import Response
 from savraska.templates import build_template
 from savraska.utils import EMail, SMSNotifier, EMAILNotifier
-from savraska.logs import savraska_log
+from savraska.logs import savraska_log, Loger
 from savraska.engine import engine
 from savraska.decorators import AppRoute, Debug
 from savraska.urls import Url
+
+
+savraska_loger = Loger('file')
 
 
 urlpatterns = []
@@ -23,6 +26,7 @@ class IndexPage(View):
         body = build_template(request, context, 'index.html')
 
         savraska_log.debug(f'Переход к главной странице, {str(request)}')
+        savraska_loger.write(f'Переход к главной странице, {str(request)}')
 
         return Response(request, body=body)
 

@@ -64,7 +64,7 @@ class FileWriter:
 # endregion
 
 class Loger(metaclass=SingletonByName):
-    def __init__(self, name, writer=ConsoleWriter):
+    def __init__(self, name, writer=FileWriter()):
         self.name = name
         self.writer = writer
 

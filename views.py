@@ -2,7 +2,7 @@ from datetime import datetime
 
 from savraska.exceptions import InvalidGETException, InvalidPOSTException
 from savraska.request import Request
-from savraska.view import View, ListView
+from savraska.view import View, ListView, CreateView
 from savraska.response import Response
 from savraska.templates import build_template
 from savraska.utils import EMail, SMSNotifier, EMAILNotifier, JsonSerializer
@@ -168,7 +168,9 @@ class CourseAddPage(View):
         return Response(request, body=body)
 
 
-class CourseAddCategoryPage(View):
+class CourseAddCategoryPage(CreateView):
+    template_name = 'courses.html'
+    queryset = engine.get_categories()
 
     def get(self, request: Request, *args, **kwargs):
         parent_category_id = None
@@ -179,8 +181,8 @@ class CourseAddCategoryPage(View):
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
-
+    def get_request_data(self, request):
+        data = {'parent_category': '', 'category_name': ''}
         if request.POST:
             parent_category_id = request.POST.get('parent_category_id')
             parent_category = None
@@ -188,14 +190,21 @@ class CourseAddCategoryPage(View):
                 parent_category_id = parent_category_id[0]
                 parent_category = engine.get_category_by_id(parent_category_id)
 
-            new_category = engine.create_category(request.POST['name'][0], parent_category)
-            if not parent_category:
-                engine.add_category(new_category)
+            data['parent_category'] = parent_category
+            data['category_name'] = request.POST['name'][0]
 
-        context = {'objects_list': engine.get_categories()}
-        body = build_template(request, context, 'courses.html')
+        return data
 
-        return Response(request, body=body)
+    def create_obj(self, data):
+        parent_category = data['parent_category']
+        category_name = data['category_name']
+
+        new_category = engine.create_category(category_name, parent_category)
+        if not parent_category:
+            engine.add_category(new_category)
+
+    def get_context_data(self):
+        return {'objects_list': engine.get_categories()}
 
 
 @AppRoute(urlpatterns, '^/math.*$')
@@ -229,22 +238,22 @@ class StudentsListPage(ListView):
 
 
 @AppRoute(urlpatterns, '^/students-add/$')
-class StudentsAdd(View):
+class StudentsAdd(CreateView):
+    template_name = 'students.html'
+
+    def get_request_data(self, request):
+        student_name = ''
+        if request.POST:
+            student_name = request.POST.get('name')[0]
+        return student_name
+
+    def create_obj(self, data):
+        student = engine.create_user('student', data)
+        engine.add_student(student)
+
     def get(self, request: Request, *args, **kwargs):
         context = {}
         body = build_template(request, context, 'students-add.html')
-
-        return Response(request, body=body)
-
-    def post(self, request: Request, *args, **kwargs) -> Response:
-
-        if request.POST:
-            student_name = request.POST.get('name')[0]
-            student = engine.create_user('student', student_name)
-            engine.add_student(student)
-
-        context = {}
-        body = build_template(request, context, 'students.html')
 
         return Response(request, body=body)
 

@@ -52,3 +52,22 @@ class ListView(TemplateView):
         context_object_name = self.get_context_object_name()
         context = {context_object_name: queryset}
         return context
+
+
+class CreateView(TemplateView):
+    template_name = 'create.html'
+    redirect_name = 'list.html'
+
+    @staticmethod
+    def get_request_data(request):
+        return request['data']
+
+    def create_obj(self, data):
+        pass
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        # метод пост
+        data = self.get_request_data(request)
+        self.create_obj(data)
+
+        return self.render_template_with_context(request)

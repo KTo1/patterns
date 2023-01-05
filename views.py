@@ -2,7 +2,7 @@ from datetime import datetime
 
 from savraska.exceptions import InvalidGETException, InvalidPOSTException
 from savraska.request import Request
-from savraska.view import View
+from savraska.view import View, ListView
 from savraska.response import Response
 from savraska.templates import build_template
 from savraska.utils import EMail, SMSNotifier, EMAILNotifier, JsonSerializer
@@ -70,13 +70,9 @@ class ContactPage(View):
         return Response(request, body=body)
 
 
-class CoursePage(View):
-
-    def get(self, request: Request, *args, **kwargs):
-        context = {'categories': engine.get_categories()}
-        body = build_template(request, context, 'courses.html')
-
-        return Response(request, body=body)
+class CoursePage(ListView):
+    queryset = engine.get_categories()
+    template_name = 'courses.html'
 
 
 class CourseCategoryPage(View):
@@ -196,7 +192,7 @@ class CourseAddCategoryPage(View):
             if not parent_category:
                 engine.add_category(new_category)
 
-        context = {'categories': engine.get_categories()}
+        context = {'objects_list': engine.get_categories()}
         body = build_template(request, context, 'courses.html')
 
         return Response(request, body=body)
@@ -227,12 +223,9 @@ class StudentsPage(View):
 
 
 @AppRoute(urlpatterns, '^/students-list/$')
-class StudentsListPage(View):
-    def get(self, request: Request, *args, **kwargs):
-        context = {'students': engine.get_students()}
-        body = build_template(request, context, 'students-list.html')
-
-        return Response(request, body=body)
+class StudentsListPage(ListView):
+    queryset = engine.get_students()
+    template_name = 'students-list.html'
 
 
 @AppRoute(urlpatterns, '^/students-add/$')

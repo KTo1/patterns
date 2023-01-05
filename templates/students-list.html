@@ -14,8 +14,8 @@
       <h1>Студенты</h1>
       <h4><a href="/students">Назад</a></h4>
 
-        {% for student in students %}
-            <li>{{ student.name }} (<a href="/students-bind">Записать на курс</a>)</li>
+        {% for object in objects_list %}
+            <li>{{ object.name }} (<a href="/students-bind">Записать на курс</a>)</li>
         {% endfor %}
 
 {% endblock %}

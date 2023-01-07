@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block menu %}
+        <ul id="menu">
+          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+          <li><a href="/">Главная</a></li>
+          <li><a href="/courses">Курсы</a></li>
+          <li class="selected"><a href="/students">Студенты</a></li>
+          <li><a href="/schedules">Расписания</a></li>
+          <li><a href="/contact">Связаться</a></li>
+        </ul>
+{% endblock %}
+{% block content %}
+      <!-- insert the page content here -->
+    <h1>Добавление студента на курс</h1>
+    <h4><a href="/students">Назад</a></h4>
+    <form method="post">
+        <div class="form_settings">
+            <p><span>Выберите студента</span>
+                <select size="9" name="student_id">
+                    {% for item in students %}
+                        <option value="{{item.id}}">{{item.name}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p><span>Выберите курс</span>
+                <select size="9" name="course_id">
+                    {% for item in courses %}
+                        <option value="{{item.id}}">{{item.name}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p style="padding-top: 15px"><span>&nbsp;</span><input class="submit" type="submit" name="contact_submitted" value="Записать" /></p>
+        </div>
+    </form>
+
+{% endblock %}

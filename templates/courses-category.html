@@ -4,6 +4,7 @@
           <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
           <li><a href="/">Главная</a></li>
           <li class="selected"><a href="/courses">Курсы</a></li>
+          <li><a href="/students">Студенты</a></li>
           <li><a href="/schedules">Расписания</a></li>
           <li><a href="/contact">Связаться</a></li>
         </ul>
@@ -18,7 +19,7 @@
           <h4>Список курсов по категории "{{ category.name }}":</h4>
           <ul>
             {% for course in courses %}
-              <li>{{ course.name }} ( <a href="/copy-course/?name={{ course.name }}&category_id={{ category.id }}">скопировать</a> )</li>
+              <li>{{ course.name }} ( <a href="/copy-course/?course_id={{ course.id }}&category_id={{ category.id }}">скопировать</a> )</li>
             {% endfor %}
           </ul>
      {% endif %}

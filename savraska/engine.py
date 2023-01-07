@@ -1,10 +1,13 @@
 from copy import deepcopy
-from operator import itemgetter
 from uuid import uuid4
+
+from savraska.utils import Subject
 
 
 class User:
-    pass
+    def __init__(self, name: str):
+        self.id = uuid4()
+        self.name = name
 
 
 class Teacher(User):
@@ -12,7 +15,9 @@ class Teacher(User):
 
 
 class Student(User):
-    pass
+    def __init__(self, name: str):
+        super(Student, self).__init__(name)
+        self.courses = []
 
 
 class UserFactory:
@@ -24,8 +29,8 @@ class UserFactory:
     }
 
     @classmethod
-    def create(cls, user_type):
-        return cls.user_types[user_type]()
+    def create(cls, user_type: str, name: str):
+        return cls.user_types[user_type](name)
 
 
 class CoursePrototype:
@@ -35,12 +40,20 @@ class CoursePrototype:
         return deepcopy(self)
 
 
-class Course(CoursePrototype):
+class Course(CoursePrototype, Subject):
 
     def __init__(self, name, category):
+        self.id = uuid4()
         self.name = name
         self.category = category
+        self.students = []
 
+        super(Course, self).__init__()
+
+    def add_student(self, student: Student):
+        self.students.append(student)
+        student.courses.append(self)
+        self.notify()
 
 class InteractiveCourse(Course):
     pass
@@ -94,6 +107,12 @@ class Engine:
         self.courses = []
         self.categories = []
 
+    def get_students(self):
+        return self.students
+
+    def get_courses(self):
+        return self.courses
+
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
             if category.categories:
@@ -108,22 +127,21 @@ class Engine:
 
         self.__get_categories_rec(categories, category_list, level=1)
 
-        # category_list = sorted(category_list, key=itemgetter('order', 'level'))
         category_list = category_list[::-1]
         for item in category_list:
             item['level'] = '_' * item['level']
         return category_list
 
     @staticmethod
-    def create_user(user_type):
-        return UserFactory.create(user_type)
+    def create_user(user_type, name):
+        return UserFactory.create(user_type, name)
 
     @staticmethod
     def create_category(name, parent_category=None):
         return Category(name, parent_category)
 
     @staticmethod
-    def create_course(course_type, name, category):
+    def create_course(course_type, name, category) -> Course:
         course = CourseFactory.create(course_type, name, category)
         category.course_add(course)
 
@@ -135,10 +153,16 @@ class Engine:
                 return category['category']
         return None
 
-    def get_course_by_name(self, name):
+    def get_course_by_id(self, course_id: str):
         for course in self.courses:
-            if course.name == name:
+            if str(course.id) == course_id:
                 return course
+        return None
+
+    def get_student_by_id(self, student_id: str):
+        for student in self.students:
+            if str(student.id) == student_id:
+                return student
         return None
 
     def get_courses_by_category(self, category):
@@ -149,6 +173,9 @@ class Engine:
 
     def add_course(self, course):
         self.courses.append(course)
+
+    def add_student(self, student: Student):
+        self.students.append(student)
 
 
 engine = Engine()

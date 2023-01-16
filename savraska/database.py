@@ -23,6 +23,7 @@ class StudentMapper:
             student = Student(name)
             student.id = id
             result.append(student)
+
         return result
 
     def get(self, id):

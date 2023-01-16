@@ -1,23 +1,8 @@
 from copy import deepcopy
 from uuid import uuid4
 
+from savraska.database import Teacher, Student, Category
 from savraska.utils import Subject
-
-
-class User:
-    def __init__(self, name: str):
-        self.id = uuid4()
-        self.name = name
-
-
-class Teacher(User):
-    pass
-
-
-class Student(User):
-    def __init__(self, name: str):
-        super(Student, self).__init__(name)
-        self.courses = []
 
 
 class UserFactory:
@@ -55,6 +40,7 @@ class Course(CoursePrototype, Subject):
         student.courses.append(self)
         self.notify()
 
+
 class InteractiveCourse(Course):
     pass
 
@@ -72,30 +58,6 @@ class CourseFactory:
     @classmethod
     def create(cls, course_type, name, category):
         return cls.course_types[course_type](name, category)
-
-
-class Category:
-
-    def __init__(self, name, parent_category):
-        self.id = uuid4()
-        self.name = name
-        self.parent = parent_category
-        self.courses = []
-        self.categories = []
-        if parent_category:
-            parent_category.categories.append(self)
-
-    def course_add(self, course):
-        self.courses.append(course)
-
-    def course_count(self):
-        result = len(self.courses)
-        if self.parent:
-            result += self.parent.course_count()
-        return result
-
-    def __str__(self):
-        return f'{self.name}: {self.id}'
 
 
 class Engine:

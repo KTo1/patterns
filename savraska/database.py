@@ -1,10 +1,117 @@
 from threading import local
-from engine import Student, Category
+from uuid import uuid4
+
 from savraska.exceptions import RecordNotFoundException, DbCommitException, DbDeleteException, DbUpdateException
 from sqlite3 import connect
 
 
-connection = connect('database.sqlite')
+connection = connect('database.sqlite', check_same_thread=False)
+
+
+class UnitOfWork:
+    current = local()
+
+    def __init__(self):
+        self.new_objects = []
+        self.dirty_objects = []
+        self.del_objects = []
+
+    def register_new(self, obj):
+        self.new_objects.append(obj)
+
+    def register_dirty(self, obj):
+        self.dirty_objects.append(obj)
+
+    def register_del(self, obj):
+        self.del_objects.append(obj)
+
+    def set_mapper_registry(self, MapperRegistry):
+        self.mr = MapperRegistry
+
+    def insert(self):
+        for elem in self.new_objects:
+            self.mr.get_mapper(elem).insert(elem)
+
+    def update(self):
+        for elem in self.dirty_objects:
+            self.mr.get_mapper(elem).update(elem)
+
+    def delete(self):
+        for elem in self.del_objects:
+            self.mr.get_mapper(elem).delete(elem)
+
+    def commit(self):
+        self.insert()
+        self.update()
+        self.delete()
+
+        self.new_objects.clear()
+        self.dirty_objects.clear()
+        self.del_objects.clear()
+
+    @staticmethod
+    def new_current():
+        __class__.set_current(UnitOfWork())
+
+    @classmethod
+    def set_current(cls, unit_of_work):
+        cls.current.unit_of_work = unit_of_work
+
+    @classmethod
+    def get_current(cls):
+        return cls.current.unit_of_work
+
+
+class DomainObject:
+
+    def mark_new(self):
+        UnitOfWork.get_current().register_new(self)
+
+    def mark_update(self):
+        UnitOfWork.get_current().register_dirty(self)
+
+    def mark_delete(self):
+        UnitOfWork.get_current().register_del(self)
+
+
+class User:
+    def __init__(self, name: str):
+        self.id = uuid4()
+        self.name = name
+
+
+class Teacher(User):
+    pass
+
+
+class Student(User, DomainObject):
+    def __init__(self, name: str):
+        super(Student, self).__init__(name)
+        self.courses = []
+
+
+class Category:
+
+    def __init__(self, name, parent_category):
+        self.id = uuid4()
+        self.name = name
+        self.parent = parent_category
+        self.courses = []
+        self.categories = []
+        if parent_category:
+            parent_category.categories.append(self)
+
+    def course_add(self, course):
+        self.courses.append(course)
+
+    def course_count(self):
+        result = len(self.courses)
+        if self.parent:
+            result += self.parent.course_count()
+        return result
+
+    def __str__(self):
+        return f'{self.name}: {self.id}'
 
 
 class BaseMapper:
@@ -32,7 +139,7 @@ class BaseMapper:
     def update(self, obj):
         statement = f'UPDATE {self.tablename} SET name=? WHERE id=?'
 
-        self.cursor.execute(statement, (obj.name, obj.id))
+        self.cursor.execute(statement, (obj.id, obj.name))
         try:
             self.connection.commit()
         except Exception as e:
@@ -81,7 +188,7 @@ class StudentMapper(BaseMapper):
 
     def __init__(self, connection):
         super(StudentMapper, self).__init__(connection)
-        self.tablename = 'student'
+        self.tablename = 'students'
 
     def all(self):
         statement = f'SELECT * from {self.tablename}'
@@ -104,69 +211,24 @@ class StudentMapper(BaseMapper):
         else:
             raise RecordNotFoundException(f'record with id={id} not found')
 
+class MapperRegistry:
 
-class UnitOfWork:
-    current = local()
-
-    def __init__(self):
-        self.new_objects = []
-        self.dirty_objects = []
-        self.del_objects = []
-
-    def register_new(self, obj):
-        self.new_objects.append(obj)
-
-    def register_dirty(self, obj):
-        self.dirty_objects.append(obj)
-
-    def register_del(self, obj):
-        self.del_objects.append(obj)
-
-    def set_mapper_registry(self, MapperRegistry):
-        self.mr = MapperRegistry
-
-    def insert(self):
-        for elem in self.new_objects:
-            self.mr.get_mapper(elem).insert(elem)
-
-    def update(self):
-        for elem in self.new_objects:
-            self.mr.get_mapper(elem).update(elem)
-
-    def delete(self):
-        for elem in self.new_objects:
-            self.mr.get_mapper(elem).delete(elem)
-
-    def commit(self):
-        self.insert()
-        self.update()
-        self.delete()
-
-        self.new_objects.clear()
-        self.dirty_objects.clear()
-        self.del_objects.clear()
+    mappers = {
+        'student': StudentMapper,
+        'category': CategoryMapper
+    }
 
     @staticmethod
-    def new_current():
-        __class__.set_current(UnitOfWork())
+    def get_mapper(obj):
 
-    @classmethod
-    def set_current(cls, unit_of_work):
-        cls.current.unit_of_work = unit_of_work
+        if isinstance(obj, Student):
 
-    @classmethod
-    def get_current(cls):
-        return cls.current.unit_of_work
+            return StudentMapper(connection)
 
+        if isinstance(obj, Category):
 
-class DomainObject:
+            return CategoryMapper(connection)
 
-    def mark_new(self):
-        UnitOfWork.get_current().register_new(self)
-
-    def mark_update(self):
-        UnitOfWork.get_current().register_dirty(self)
-
-    def mark_delete(self):
-        UnitOfWork.get_current().register_del(self)
-
+    @staticmethod
+    def get_current_mapper(name):
+        return MapperRegistry.mappers[name](connection)

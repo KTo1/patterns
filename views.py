@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from savraska.database import MapperRegistry, UnitOfWork
 from savraska.exceptions import InvalidGETException, InvalidPOSTException
 from savraska.request import Request
 from savraska.view import View, ListView, CreateView
@@ -13,6 +14,8 @@ from savraska.urls import Url
 
 
 savraska_loger = Loger('file')
+UnitOfWork.new_current()
+UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
 
 urlpatterns = []
@@ -233,8 +236,11 @@ class StudentsPage(View):
 
 @AppRoute(urlpatterns, '^/students-list/$')
 class StudentsListPage(ListView):
-    queryset = engine.get_students()
     template_name = 'students-list.html'
+
+    def get_queryset(self):
+        mapper = MapperRegistry.get_current_mapper('student')
+        return mapper.all()
 
 
 @AppRoute(urlpatterns, '^/students-add/$')
@@ -248,8 +254,13 @@ class StudentsAdd(CreateView):
         return student_name
 
     def create_obj(self, data):
+        UnitOfWork.new_current()
+        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
+
         student = engine.create_user('student', data)
         engine.add_student(student)
+        student.mark_new()
+        UnitOfWork.get_current().commit()
 
     def get(self, request: Request, *args, **kwargs):
         context = {}

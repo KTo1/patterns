@@ -10,7 +10,9 @@ CREATE TABLE students (
 DROP TABLE IF EXISTS categories;
 CREATE TABLE categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-    name TEXT
+    parent_id INTEGER,
+    name TEXT,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
 );
 
 DROP TABLE IF EXISTS courses;

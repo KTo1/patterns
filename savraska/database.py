@@ -1,5 +1,5 @@
 from threading import local
-from engine import Student
+from engine import Student, Category
 from savraska.exceptions import RecordNotFoundException, DbCommitException, DbDeleteException, DbUpdateException
 from sqlite3 import connect
 
@@ -7,33 +7,19 @@ from sqlite3 import connect
 connection = connect('database.sqlite')
 
 
-class StudentMapper:
+class BaseMapper:
+    """ Базовый маппер """
 
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
-        self.tablename = 'student'
+        self.tablename = 'some_table'
 
     def all(self):
-        statement = f'SELECT * from {self.tablename}'
-        self.cursor.execute(statement)
-        result = []
-        for item in self.cursor.fetchall():
-            id, name = item
-            student = Student(name)
-            student.id = id
-            result.append(student)
-
-        return result
+        pass
 
     def get(self, id):
-        statement = f'SELECT id, name FROM {self.tablename} WHERE id=?'
-        self.cursor.execute(statement, (id,))
-        result = self.cursor.fetchone()
-        if result:
-            return Student(*result)
-        else:
-            raise RecordNotFoundException(f'record with id={id} not found')
+        pass
 
     def insert(self, obj):
         statement = f'INSERT INTO {self.tablename} (name) VALUES (?)'
@@ -59,6 +45,64 @@ class StudentMapper:
             self.connection.commit()
         except Exception as e:
             raise DbDeleteException(e.args)
+
+
+class CategoryMapper(BaseMapper):
+    """ Маппер категорий """
+
+    def __init__(self, connection):
+        super(CategoryMapper, self).__init__(connection)
+        self.tablename = 'categories'
+
+    def all(self):
+        statement = f'SELECT * from {self.tablename}'
+        self.cursor.execute(statement)
+        result = []
+        for item in self.cursor.fetchall():
+            id, parent_id, name = item
+            category = Category(name, parent_id)
+            category.id = id
+            result.append(category)
+
+        return result
+
+    def get(self, id):
+        statement = f'SELECT id, name FROM {self.tablename} WHERE id=?'
+        self.cursor.execute(statement, (id,))
+        result = self.cursor.fetchone()
+        if result:
+            return Category(*result)
+        else:
+            raise RecordNotFoundException(f'record with id={id} not found')
+
+
+class StudentMapper(BaseMapper):
+    """ Маппер студентов """
+
+    def __init__(self, connection):
+        super(StudentMapper, self).__init__(connection)
+        self.tablename = 'student'
+
+    def all(self):
+        statement = f'SELECT * from {self.tablename}'
+        self.cursor.execute(statement)
+        result = []
+        for item in self.cursor.fetchall():
+            id, name = item
+            student = Student(name)
+            student.id = id
+            result.append(student)
+
+        return result
+
+    def get(self, id):
+        statement = f'SELECT id, name FROM {self.tablename} WHERE id=?'
+        self.cursor.execute(statement, (id,))
+        result = self.cursor.fetchone()
+        if result:
+            return Student(*result)
+        else:
+            raise RecordNotFoundException(f'record with id={id} not found')
 
 
 class UnitOfWork:

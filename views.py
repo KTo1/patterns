@@ -74,8 +74,16 @@ class ContactPage(View):
 
 
 class CoursePage(ListView):
-    queryset = engine.get_categories()
+    # queryset = engine.get_categories()
     template_name = 'courses.html'
+
+    def get_queryset(self):
+        mapper = MapperRegistry.get_current_mapper('category')
+        category_list = []
+        for category in mapper.all():
+            category_list.append({'category': category, 'level': '', 'id': category.id})
+
+        return category_list
 
 
 class CourseCategoryPage(View):
@@ -136,7 +144,8 @@ class CourseCopyPage(View):
         return Response(request, body=body)
 
 
-class CourseAddPage(View):
+class CourseAddPage(CreateView):
+    template_name = 'courses-category.html'
 
     def get(self, request: Request, *args, **kwargs):
 
@@ -151,29 +160,44 @@ class CourseAddPage(View):
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
-
+    def get_request_data(self, request):
+        data = {'course_name': '', 'category': ''}
         if request.POST:
             category_id = request.POST['category_id'][0]
             category = engine.get_category_by_id(category_id)
-            new_course = engine.create_course('record', request.POST['name'][0], category)
-            new_course.add_observer(SMSNotifier())
-            new_course.add_observer(EMAILNotifier())
+            course_name = request.POST['name'][0]
 
-            engine.add_course(new_course)
-            courses = engine.get_courses_by_category(category)
-        else:
-            raise InvalidPOSTException
+            data['course_name'] = course_name
+            data['category'] = category
+
+        return data
+
+    def create_obj(self, data):
+        course_name = data['course_name']
+        category = data['category']
+
+        new_course = engine.create_course('record', course_name, category)
+        new_course.add_observer(SMSNotifier())
+        new_course.add_observer(EMAILNotifier())
+
+        engine.add_course(new_course)
+
+        UnitOfWork.new_current()
+        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
+
+        new_course.mark_new()
+        UnitOfWork.get_current().commit()
+
+    def get_context_data(self):
+        category = engine.courses[-1].category
+        courses = engine.get_courses_by_category(category)
 
         context = {'courses': courses, 'category': category}
-        body = build_template(request, context, 'courses-category.html')
-
-        return Response(request, body=body)
+        return context
 
 
 class CourseAddCategoryPage(CreateView):
     template_name = 'courses.html'
-    queryset = engine.get_categories()
 
     def get(self, request: Request, *args, **kwargs):
         parent_category_id = None
@@ -202,12 +226,23 @@ class CourseAddCategoryPage(CreateView):
         parent_category = data['parent_category']
         category_name = data['category_name']
 
-        new_category = engine.create_category(category_name, parent_category)
+        new_category = engine.create_category(category_name)
         if not parent_category:
             engine.add_category(new_category)
 
+        UnitOfWork.new_current()
+        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
+
+        new_category.mark_new()
+        UnitOfWork.get_current().commit()
+
     def get_context_data(self):
-        return {'objects_list': engine.get_categories()}
+        mapper = MapperRegistry.get_current_mapper('category')
+        category_list = []
+        for category in mapper.all():
+            category_list.append({'category': category, 'level': '', 'id': category.id})
+
+        return {'objects_list': category_list}
 
 
 @AppRoute(urlpatterns, '^/math.*$')

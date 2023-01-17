@@ -1,5 +1,7 @@
 from threading import local
 from uuid import uuid4
+from copy import deepcopy
+from savraska.utils import Subject
 
 from savraska.exceptions import RecordNotFoundException, DbCommitException, DbDeleteException, DbUpdateException
 from sqlite3 import connect
@@ -74,6 +76,8 @@ class DomainObject:
         UnitOfWork.get_current().register_del(self)
 
 
+# region Users
+
 class User:
     def __init__(self, name: str):
         self.id = uuid4()
@@ -89,8 +93,46 @@ class Student(User, DomainObject):
         super(Student, self).__init__(name)
         self.courses = []
 
+# endregion
 
-class Category:
+
+# region Courses
+
+class CoursePrototype:
+    """ Паттерн прототип """
+
+    def clone(self):
+        return deepcopy(self)
+
+
+class Course(CoursePrototype, Subject, DomainObject):
+
+    def __init__(self, name, category):
+        self.id = uuid4()
+        self.name = name
+        self.category = category
+        self.students = []
+
+        super(Course, self).__init__()
+
+    def add_student(self, student: Student):
+        self.students.append(student)
+        student.courses.append(self)
+        self.notify()
+
+
+class InteractiveCourse(Course):
+    pass
+
+
+class RecordCourse(Course):
+    pass
+
+
+# endregion
+
+
+class Category(DomainObject):
 
     def __init__(self, name, parent_category):
         self.id = uuid4()
@@ -154,6 +196,46 @@ class BaseMapper:
             raise DbDeleteException(e.args)
 
 
+class CourseMapper(BaseMapper):
+    """ Маппер курсов """
+
+    def __init__(self, connection):
+        super(CourseMapper, self).__init__(connection)
+        self.tablename = 'courses'
+
+    def all(self):
+        statement = f'SELECT * from {self.tablename}'
+        self.cursor.execute(statement)
+        result = []
+        for item in self.cursor.fetchall():
+            id, id_category, name = item
+
+            course = Course(name, id_category)
+            course.id = id
+            result.append(course)
+
+        return result
+
+    def get(self, id):
+        statement = f'SELECT id, id_category, name FROM {self.tablename} WHERE id=?'
+        self.cursor.execute(statement, (id,))
+        result = self.cursor.fetchone()
+
+        if result:
+            return Category(*result)
+        else:
+            raise RecordNotFoundException(f'record with id={id} not found')
+
+    def insert(self, obj):
+        statement = f'INSERT INTO {self.tablename} (id_category, name) VALUES (?, ?)'
+        self.cursor.execute(statement, (obj.category.id, obj.name))
+
+        try:
+            self.connection.commit()
+        except Exception as e:
+            raise DbCommitException(e.args)
+
+
 class CategoryMapper(BaseMapper):
     """ Маппер категорий """
 
@@ -211,11 +293,13 @@ class StudentMapper(BaseMapper):
         else:
             raise RecordNotFoundException(f'record with id={id} not found')
 
+
 class MapperRegistry:
 
     mappers = {
         'student': StudentMapper,
-        'category': CategoryMapper
+        'category': CategoryMapper,
+        'course': CourseMapper
     }
 
     @staticmethod
@@ -228,6 +312,10 @@ class MapperRegistry:
         if isinstance(obj, Category):
 
             return CategoryMapper(connection)
+
+        if isinstance(obj, Course):
+
+            return CourseMapper(connection)
 
     @staticmethod
     def get_current_mapper(name):

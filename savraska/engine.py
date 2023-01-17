@@ -1,8 +1,4 @@
-from copy import deepcopy
-from uuid import uuid4
-
-from savraska.database import Teacher, Student, Category
-from savraska.utils import Subject
+from savraska.database import Teacher, Student, Category, Course, InteractiveCourse, RecordCourse
 
 
 class UserFactory:
@@ -16,37 +12,6 @@ class UserFactory:
     @classmethod
     def create(cls, user_type: str, name: str):
         return cls.user_types[user_type](name)
-
-
-class CoursePrototype:
-    """ Паттерн прототип """
-
-    def clone(self):
-        return deepcopy(self)
-
-
-class Course(CoursePrototype, Subject):
-
-    def __init__(self, name, category):
-        self.id = uuid4()
-        self.name = name
-        self.category = category
-        self.students = []
-
-        super(Course, self).__init__()
-
-    def add_student(self, student: Student):
-        self.students.append(student)
-        student.courses.append(self)
-        self.notify()
-
-
-class InteractiveCourse(Course):
-    pass
-
-
-class RecordCourse(Course):
-    pass
 
 
 class CourseFactory:

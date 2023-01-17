@@ -74,16 +74,8 @@ class ContactPage(View):
 
 
 class CoursePage(ListView):
-    # queryset = engine.get_categories()
+    queryset = engine.get_categories()
     template_name = 'courses.html'
-
-    def get_queryset(self):
-        mapper = MapperRegistry.get_current_mapper('category')
-        category_list = []
-        for category in mapper.all():
-            category_list.append({'category': category, 'level': '', 'id': category.id})
-
-        return category_list
 
 
 class CourseCategoryPage(View):
@@ -92,8 +84,8 @@ class CourseCategoryPage(View):
         category = ''
         if request.GET:
             category_id = request.GET['id'][0]
+            courses = engine.get_courses_by_category_id(category_id)
             category = engine.get_category_by_id(category_id)
-            courses = engine.get_courses_by_category(category)
 
         context = {'courses': courses, 'category': category}
         body = build_template(request, context, 'courses-category.html')
@@ -190,7 +182,7 @@ class CourseAddPage(CreateView):
 
     def get_context_data(self):
         category = engine.courses[-1].category
-        courses = engine.get_courses_by_category(category)
+        courses = engine.get_courses_by_category_id(category.id)
 
         context = {'courses': courses, 'category': category}
         return context
@@ -200,7 +192,7 @@ class CourseAddCategoryPage(CreateView):
     template_name = 'courses.html'
 
     def get(self, request: Request, *args, **kwargs):
-        parent_category_id = None
+        parent_category_id = 0
         if request.GET:
             parent_category_id = request.GET['category_id'][0]
         context = {'parent_category_id': parent_category_id}
@@ -211,10 +203,9 @@ class CourseAddCategoryPage(CreateView):
     def get_request_data(self, request):
         data = {'parent_category': '', 'category_name': ''}
         if request.POST:
-            parent_category_id = request.POST.get('parent_category_id')
+            parent_category_id = int(request.POST.get('parent_category_id')[0])
             parent_category = None
             if parent_category_id:
-                parent_category_id = parent_category_id[0]
                 parent_category = engine.get_category_by_id(parent_category_id)
 
             data['parent_category'] = parent_category
@@ -237,12 +228,7 @@ class CourseAddCategoryPage(CreateView):
         UnitOfWork.get_current().commit()
 
     def get_context_data(self):
-        mapper = MapperRegistry.get_current_mapper('category')
-        category_list = []
-        for category in mapper.all():
-            category_list.append({'category': category, 'level': '', 'id': category.id})
-
-        return {'objects_list': category_list}
+        return {'objects_list': engine.get_categories()}
 
 
 @AppRoute(urlpatterns, '^/math.*$')
@@ -272,10 +258,7 @@ class StudentsPage(View):
 @AppRoute(urlpatterns, '^/students-list/$')
 class StudentsListPage(ListView):
     template_name = 'students-list.html'
-
-    def get_queryset(self):
-        mapper = MapperRegistry.get_current_mapper('student')
-        return mapper.all()
+    queryset = engine.get_students()
 
 
 @AppRoute(urlpatterns, '^/students-add/$')

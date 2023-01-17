@@ -20,8 +20,9 @@
     {% for category_dict in objects_list %}
         {% set category = category_dict.category %}
         {% set level = category_dict.level %}
-
-        <li>{{ level }} {{ category.name }} ({{ category.courses|length }}) (<a href="/courses-category/?id={{ category.id }}">Показать курсы</a>) (<a href="/add-category/?category_id={{ category.id }}">Добавить подкатегорию</a>)</li>
+        {% set len = category_dict.len %}
+<!--        <li>{{ level }} {{ category.name }} ({{ category.courses|length }}) (<a href="/courses-category/?id={{ category.id }}">Показать курсы</a>) (<a href="/add-category/?category_id={{ category.id }}">Добавить подкатегорию</a>)</li>-->
+        <li>{{ level }} {{ category.name }} ({{ len }}) (<a href="/courses-category/?id={{ category.id }}">Показать курсы</a>) </li>
     {% endfor %}
 </ul>
 {% endif %}

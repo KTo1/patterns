@@ -134,22 +134,17 @@ class RecordCourse(Course):
 
 class Category(DomainObject):
 
-    def __init__(self, name, parent_category):
-        self.id = uuid4()
+    def __init__(self, id, parent_category_id,  name):
+        self.id = id
         self.name = name
-        self.parent = parent_category
         self.courses = []
         self.categories = []
-        if parent_category:
-            parent_category.categories.append(self)
 
     def course_add(self, course):
         self.courses.append(course)
 
     def course_count(self):
         result = len(self.courses)
-        if self.parent:
-            result += self.parent.course_count()
         return result
 
     def __str__(self):
@@ -216,6 +211,19 @@ class CourseMapper(BaseMapper):
 
         return result
 
+    def get_by_category_id(self, category_id):
+        statement = f'SELECT * from {self.tablename} WHERE id_category=?'
+        self.cursor.execute(statement, (category_id,))
+        result = []
+        for item in self.cursor.fetchall():
+            id, id_category, name = item
+
+            course = Course(name, id_category)
+            course.id = id
+            result.append(course)
+
+        return result
+
     def get(self, id):
         statement = f'SELECT id, id_category, name FROM {self.tablename} WHERE id=?'
         self.cursor.execute(statement, (id,))
@@ -249,14 +257,14 @@ class CategoryMapper(BaseMapper):
         result = []
         for item in self.cursor.fetchall():
             id, parent_id, name = item
-            category = Category(name, parent_id)
+            category = Category(id, parent_id, name)
             category.id = id
             result.append(category)
 
         return result
 
     def get(self, id):
-        statement = f'SELECT id, name FROM {self.tablename} WHERE id=?'
+        statement = f'SELECT id, parent_id, name FROM {self.tablename} WHERE id=?'
         self.cursor.execute(statement, (id,))
         result = self.cursor.fetchone()
         if result:

@@ -11,12 +11,11 @@
 {% endblock %}
 {% block content %}
       <!-- insert the page content here -->
-      <h1>Список курсов</h1>
+      <h1>Список курсов по категории "{{ category.name }}":</h1>
       <h4><a href="/courses">Назад</a></h4>
       <h4><a href="/add-course/?category_id={{ category.id }}">Добавить курс</a></h4>
 
       {% if courses %}
-          <h4>Список курсов по категории "{{ category.name }}":</h4>
           <ul>
             {% for course in courses %}
               <li>{{ course.name }} ( <a href="/copy-course/?course_id={{ course.id }}&category_id={{ category.id }}">скопировать</a> )</li>

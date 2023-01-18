@@ -74,8 +74,9 @@ class ContactPage(View):
 
 
 class CoursePage(ListView):
-    queryset = engine.get_categories()
     template_name = 'courses.html'
+    def get_queryset(self):
+        return engine.get_categories()
 
 
 class CourseCategoryPage(View):
@@ -93,7 +94,8 @@ class CourseCategoryPage(View):
         return Response(request, body=body)
 
 
-class CourseCopyPage(View):
+class CourseCopyPage(CreateView):
+    template_name = 'courses-category.html'
 
     def get(self, request: Request, *args, **kwargs):
 
@@ -111,29 +113,36 @@ class CourseCopyPage(View):
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
+    def get_request_data(self, request):
+        data = {'category_id': '', 'name': '', 'source_course_id': ''}
 
         if request.POST:
-            category_id = request.POST['category_id'][0]
-            name = request.POST['name'][0]
-            source_course_id = request.POST['source_course_id'][0]
+            data['name'] = request.POST['name'][0]
+            data['source_course_id'] = request.POST['source_course_id'][0]
 
-            category = engine.get_category_by_id(category_id)
-            source_course = engine.get_course_by_id(source_course_id)
-            new_course = source_course.clone()
-            new_course.name = name
+        return data
 
-            category.course_add(new_course)
-            engine.add_course(new_course)
+    def create_obj(self, data):
+        name = data['name']
+        source_course_id = data['source_course_id']
 
-            courses = engine.get_courses_by_category(category)
-        else:
-            raise InvalidPOSTException
+        source_course = engine.get_course_by_id(source_course_id)
+        new_course = source_course.clone()
+        new_course.name = name
 
-        context = {'courses': courses, 'category': category}
-        body = build_template(request, context, 'courses-category.html')
+        UnitOfWork.new_current()
+        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
-        return Response(request, body=body)
+        new_course.mark_new()
+        UnitOfWork.get_current().commit()
+
+        engine.data['object'] = new_course
+
+    def get_context_data(self):
+        category = engine.get_category_by_id(engine.data['object'].id_category)
+        courses = engine.get_courses_by_category_id(engine.data['object'].id_category)
+
+        return {'courses': courses, 'category': category}
 
 
 class CourseAddPage(CreateView):
@@ -168,11 +177,9 @@ class CourseAddPage(CreateView):
         course_name = data['course_name']
         category = data['category']
 
-        new_course = engine.create_course('record', course_name, category)
+        new_course = engine.create_course('record', category.id, course_name)
         new_course.add_observer(SMSNotifier())
         new_course.add_observer(EMAILNotifier())
-
-        engine.add_course(new_course)
 
         UnitOfWork.new_current()
         UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
@@ -180,12 +187,13 @@ class CourseAddPage(CreateView):
         new_course.mark_new()
         UnitOfWork.get_current().commit()
 
-    def get_context_data(self):
-        category = engine.courses[-1].category
-        courses = engine.get_courses_by_category_id(category.id)
+        engine.data['object'] = new_course
 
-        context = {'courses': courses, 'category': category}
-        return context
+    def get_context_data(self):
+        category = engine.get_category_by_id(engine.data['object'].id_category)
+        courses = engine.get_courses_by_category_id(engine.data['object'].id_category)
+
+        return  {'courses': courses, 'category': category}
 
 
 class CourseAddCategoryPage(CreateView):
@@ -258,7 +266,8 @@ class StudentsPage(View):
 @AppRoute(urlpatterns, '^/students-list/$')
 class StudentsListPage(ListView):
     template_name = 'students-list.html'
-    queryset = engine.get_students()
+    def get_queryset(self):
+        return engine.get_students()
 
 
 @AppRoute(urlpatterns, '^/students-add/$')
@@ -276,7 +285,8 @@ class StudentsAdd(CreateView):
         UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
         student = engine.create_user('student', data)
-        engine.add_student(student)
+        engine.add_student()
+
         student.mark_new()
         UnitOfWork.get_current().commit()
 
@@ -302,8 +312,6 @@ class StudentsBindPage(View):
 
             student = engine.get_student_by_id(student_id)
             course = engine.get_course_by_id(course_id)
-
-            course.add_student(student)
 
         context = {}
         body = build_template(request, context, 'students.html')

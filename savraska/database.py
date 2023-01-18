@@ -107,17 +107,14 @@ class CoursePrototype:
 
 class Course(CoursePrototype, Subject, DomainObject):
 
-    def __init__(self, name, category):
-        self.id = uuid4()
+    def __init__(self, id, id_category, name):
+        self.id = id
+        self.id_category = id_category
         self.name = name
-        self.category = category
-        self.students = []
 
         super(Course, self).__init__()
 
-    def add_student(self, student: Student):
-        self.students.append(student)
-        student.courses.append(self)
+    def add_student(self):
         self.notify()
 
 
@@ -137,15 +134,7 @@ class Category(DomainObject):
     def __init__(self, id, parent_category_id,  name):
         self.id = id
         self.name = name
-        self.courses = []
         self.categories = []
-
-    def course_add(self, course):
-        self.courses.append(course)
-
-    def course_count(self):
-        result = len(self.courses)
-        return result
 
     def __str__(self):
         return f'{self.name}: {self.id}'
@@ -205,7 +194,7 @@ class CourseMapper(BaseMapper):
         for item in self.cursor.fetchall():
             id, id_category, name = item
 
-            course = Course(name, id_category)
+            course = Course(0, id_category, name)
             course.id = id
             result.append(course)
 
@@ -218,7 +207,7 @@ class CourseMapper(BaseMapper):
         for item in self.cursor.fetchall():
             id, id_category, name = item
 
-            course = Course(name, id_category)
+            course = Course(0, id_category, name)
             course.id = id
             result.append(course)
 
@@ -230,13 +219,13 @@ class CourseMapper(BaseMapper):
         result = self.cursor.fetchone()
 
         if result:
-            return Category(*result)
+            return Course(*result)
         else:
             raise RecordNotFoundException(f'record with id={id} not found')
 
     def insert(self, obj):
         statement = f'INSERT INTO {self.tablename} (id_category, name) VALUES (?, ?)'
-        self.cursor.execute(statement, (obj.category.id, obj.name))
+        self.cursor.execute(statement, (obj.id_category, obj.name))
 
         try:
             self.connection.commit()

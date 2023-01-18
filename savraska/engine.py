@@ -21,21 +21,18 @@ class CourseFactory:
     }
 
     @classmethod
-    def create(cls, course_type, name, category):
-        return cls.course_types[course_type](name, category)
+    def create(cls, course_type, id_category, name):
+        return cls.course_types[course_type](0, id_category, name)
 
 
 class Engine:
     """ Интерфейс проекта """
 
     def __init__(self):
-        self.teachers = []
-        self.students = []
-        self.courses = []
-        self.categories = []
+        self.data = {}
 
     def get_courses(self):
-        return self.courses
+        return MapperRegistry.get_current_mapper('course').all()
 
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
@@ -46,8 +43,7 @@ class Engine:
                 category_list.append({'category': category, 'level': level, 'id': category.id})
 
     def get_students(self):
-        mapper = MapperRegistry.get_current_mapper('student')
-        return mapper.all()
+        return MapperRegistry.get_current_mapper('student').all()
 
     def get_categories(self):
 
@@ -82,40 +78,20 @@ class Engine:
         return Category(0, parent_category, name)
 
     @staticmethod
-    def create_course(course_type, name, category) -> Course:
-        course = CourseFactory.create(course_type, name, category)
-        category.course_add(course)
-
-        return course
+    def create_course(course_type, id_category, name) -> Course:
+        return CourseFactory.create(course_type, id_category, name)
 
     def get_category_by_id(self, category_id):
-        mapper_category = MapperRegistry.get_current_mapper('category')
-        return mapper_category.get(category_id)
+        return MapperRegistry.get_current_mapper('category').get(category_id)
 
     def get_course_by_id(self, course_id: str):
-        for course in self.courses:
-            if str(course.id) == course_id:
-                return course
-        return None
+        return MapperRegistry.get_current_mapper('course').get(course_id)
 
     def get_student_by_id(self, student_id: str):
-        for student in self.students:
-            if str(student.id) == student_id:
-                return student
-        return None
+        return MapperRegistry.get_current_mapper('student').get(student_id)
 
     def get_courses_by_category_id(self, category_id):
-        mapper_course = MapperRegistry.get_current_mapper('course')
-        return mapper_course.get_by_category_id(category_id)
-
-    def add_category(self, category):
-        self.categories.append(category)
-
-    def add_course(self, course):
-        self.courses.append(course)
-
-    def add_student(self, student: Student):
-        self.students.append(student)
+        return MapperRegistry.get_current_mapper('course').get_by_category_id(category_id)
 
 
 engine = Engine()

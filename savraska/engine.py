@@ -1,4 +1,4 @@
-from savraska.database import Teacher, Student, Category, Course, InteractiveCourse, RecordCourse, MapperRegistry
+from savraska.database import Teacher, Student, Category, Course, InteractiveCourse, RecordCourse, MapperRegistry, CourseStudent
 
 
 class UserFactory:
@@ -31,9 +31,6 @@ class Engine:
     def __init__(self):
         self.data = {}
 
-    def get_courses(self):
-        return MapperRegistry.get_current_mapper('course').all()
-
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
             if category.categories:
@@ -41,6 +38,9 @@ class Engine:
                 category_list.append({'category': category, 'level': level, 'id': category.id})
             else:
                 category_list.append({'category': category, 'level': level, 'id': category.id})
+
+    def get_courses(self):
+        return MapperRegistry.get_current_mapper('course').all()
 
     def get_students(self):
         return MapperRegistry.get_current_mapper('student').all()
@@ -81,11 +81,17 @@ class Engine:
     def create_course(course_type, id_category, name) -> Course:
         return CourseFactory.create(course_type, id_category, name)
 
+    def student_bind_course(self, student, course):
+        return CourseStudent(student.id, course.id)
+
     def get_category_by_id(self, category_id):
         return MapperRegistry.get_current_mapper('category').get(category_id)
 
     def get_course_by_id(self, course_id: str):
         return MapperRegistry.get_current_mapper('course').get(course_id)
+
+    def get_courses(self):
+        return MapperRegistry.get_current_mapper('course').all()
 
     def get_student_by_id(self, student_id: str):
         return MapperRegistry.get_current_mapper('student').get(student_id)

@@ -79,8 +79,8 @@ class DomainObject:
 # region Users
 
 class User:
-    def __init__(self, name: str):
-        self.id = uuid4()
+    def __init__(self, id, name: str):
+        self.id = id
         self.name = name
 
 
@@ -89,9 +89,8 @@ class Teacher(User):
 
 
 class Student(User, DomainObject):
-    def __init__(self, name: str):
-        super(Student, self).__init__(name)
-        self.courses = []
+    def __init__(self, id, name: str):
+        super(Student, self).__init__(id, name)
 
 # endregion
 
@@ -114,7 +113,7 @@ class Course(CoursePrototype, Subject, DomainObject):
 
         super(Course, self).__init__()
 
-    def add_student(self):
+    def add_student_event(self):
         self.notify()
 
 
@@ -125,6 +124,11 @@ class InteractiveCourse(Course):
 class RecordCourse(Course):
     pass
 
+
+class CourseStudent(DomainObject):
+    def __init__(self, id_student, id_course):
+        self.id_student = id_student
+        self.id_course = id_course
 
 # endregion
 
@@ -179,6 +183,22 @@ class BaseMapper:
         except Exception as e:
             raise DbDeleteException(e.args)
 
+
+class CourseStudentMapper(BaseMapper):
+    """ Маппер записей на курс """
+
+    def __init__(self, connection):
+        super(CourseStudentMapper, self).__init__(connection)
+        self.tablename = 'students_courses'
+
+    def insert(self, obj):
+        statement = f'INSERT INTO {self.tablename} (id_student, id_course) VALUES (?, ?)'
+        self.cursor.execute(statement, (obj.id_student, obj.id_course))
+
+        try:
+            self.connection.commit()
+        except Exception as e:
+            raise DbCommitException(e.args)
 
 class CourseMapper(BaseMapper):
     """ Маппер курсов """
@@ -296,7 +316,8 @@ class MapperRegistry:
     mappers = {
         'student': StudentMapper,
         'category': CategoryMapper,
-        'course': CourseMapper
+        'course': CourseMapper,
+        'course_student': CourseStudentMapper
     }
 
     @staticmethod
@@ -313,6 +334,10 @@ class MapperRegistry:
         if isinstance(obj, Course):
 
             return CourseMapper(connection)
+
+        if isinstance(obj, CourseStudent):
+
+            return CourseStudentMapper(connection)
 
     @staticmethod
     def get_current_mapper(name):

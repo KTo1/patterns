@@ -281,12 +281,10 @@ class StudentsAdd(CreateView):
         return student_name
 
     def create_obj(self, data):
+        student = engine.create_user('student', data)
+
         UnitOfWork.new_current()
         UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
-
-        student = engine.create_user('student', data)
-        engine.add_student()
-
         student.mark_new()
         UnitOfWork.get_current().commit()
 
@@ -298,31 +296,43 @@ class StudentsAdd(CreateView):
 
 
 @AppRoute(urlpatterns, '^/students-bind/$')
-class StudentsBindPage(View):
+class StudentsBindPage(CreateView):
+    template_name = 'students.html'
+
     def get(self, request: Request, *args, **kwargs):
         context = {'students': engine.get_students(), 'courses': engine.get_courses()}
         body = build_template(request, context, 'students-bind.html')
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
+    def get_request_data(self, request):
+        data = {'student': '', 'course': ''}
         if request.POST:
             student_id = request.POST.get('student_id')[0]
             course_id = request.POST.get('course_id')[0]
 
-            student = engine.get_student_by_id(student_id)
-            course = engine.get_course_by_id(course_id)
+            data['student'] = engine.get_student_by_id(student_id)
+            data['course'] = engine.get_course_by_id(course_id)
 
-        context = {}
-        body = build_template(request, context, 'students.html')
+        return data
 
-        return Response(request, body=body)
+    def create_obj(self, data):
+        student = data['student']
+        course = data['course']
+        course.add_student_event()
+
+        course_student = engine.student_bind_course(student, course)
+        UnitOfWork.new_current()
+        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
+
+        course_student.mark_new()
+        UnitOfWork.get_current().commit()
 
 
 @AppRoute(urlpatterns, '^/api-course/$')
 class CourseApi(View):
     def get(self, request: Request, *args, **kwargs) -> Response:
-        return Response(request, body=JsonSerializer.save(engine.courses))
+        return Response(request, body=JsonSerializer.save(engine.get_courses()))
 
 
 urlpatterns.extend([

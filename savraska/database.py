@@ -1,5 +1,5 @@
-from threading import local
-from uuid import uuid4
+import threading
+
 from copy import deepcopy
 from savraska.utils import Subject
 
@@ -10,10 +10,14 @@ from sqlite3 import connect
 connection = connect('database.sqlite', check_same_thread=False)
 
 
-class UnitOfWork:
-    current = local()
+class UnitOfWork(threading.local):
+
+    current = None
+    mr = None
 
     def __init__(self):
+        super(UnitOfWork, self).__init__()
+
         self.new_objects = []
         self.dirty_objects = []
         self.del_objects = []
@@ -26,9 +30,6 @@ class UnitOfWork:
 
     def register_del(self, obj):
         self.del_objects.append(obj)
-
-    def set_mapper_registry(self, MapperRegistry):
-        self.mr = MapperRegistry
 
     def insert(self):
         for elem in self.new_objects:
@@ -51,17 +52,17 @@ class UnitOfWork:
         self.dirty_objects.clear()
         self.del_objects.clear()
 
-    @staticmethod
-    def new_current():
-        __class__.set_current(UnitOfWork())
+    @classmethod
+    def set_mapper_registry(cls, MapperRegistry):
+        cls.mr = MapperRegistry
 
     @classmethod
-    def set_current(cls, unit_of_work):
-        cls.current.unit_of_work = unit_of_work
+    def new_current(cls):
+        cls.current = UnitOfWork()
 
     @classmethod
     def get_current(cls):
-        return cls.current.unit_of_work
+        return cls.current
 
 
 class DomainObject:
@@ -294,9 +295,7 @@ class StudentMapper(BaseMapper):
         self.cursor.execute(statement)
         result = []
         for item in self.cursor.fetchall():
-            id, name = item
-            student = Student(name)
-            student.id = id
+            student = Student(*item)
             result.append(student)
 
         return result
@@ -342,3 +341,8 @@ class MapperRegistry:
     @staticmethod
     def get_current_mapper(name):
         return MapperRegistry.mappers[name](connection)
+
+#
+# unit_of_work = UnitOfWork()
+# unit_of_work.new_current()
+# unit_of_work.get_current().set_mapper_registry(MapperRegistry)

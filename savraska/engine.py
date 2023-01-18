@@ -10,8 +10,8 @@ class UserFactory:
     }
 
     @classmethod
-    def create(cls, user_type: str, name: str):
-        return cls.user_types[user_type](name)
+    def create(cls, user_type: str, id:int, name: str):
+        return cls.user_types[user_type](id, name)
 
 
 class CourseFactory:
@@ -21,7 +21,7 @@ class CourseFactory:
     }
 
     @classmethod
-    def create(cls, course_type, id_category, name):
+    def create(cls, course_type: str, id_category:int, name:str):
         return cls.course_types[course_type](0, id_category, name)
 
 
@@ -71,7 +71,7 @@ class Engine:
 
     @staticmethod
     def create_user(user_type, name):
-        return UserFactory.create(user_type, name)
+        return UserFactory.create(user_type, 0, name)
 
     @staticmethod
     def create_category(name, parent_category=None):

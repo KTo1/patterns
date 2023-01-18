@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from savraska.database import MapperRegistry, UnitOfWork
-from savraska.exceptions import InvalidGETException, InvalidPOSTException
+from savraska.exceptions import InvalidGETException
 from savraska.request import Request
 from savraska.view import View, ListView, CreateView
 from savraska.response import Response
@@ -14,6 +14,7 @@ from savraska.urls import Url
 
 
 savraska_loger = Loger('file')
+
 UnitOfWork.new_current()
 UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
@@ -130,9 +131,6 @@ class CourseCopyPage(CreateView):
         new_course = source_course.clone()
         new_course.name = name
 
-        UnitOfWork.new_current()
-        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
-
         new_course.mark_new()
         UnitOfWork.get_current().commit()
 
@@ -181,9 +179,6 @@ class CourseAddPage(CreateView):
         new_course.add_observer(SMSNotifier())
         new_course.add_observer(EMAILNotifier())
 
-        UnitOfWork.new_current()
-        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
-
         new_course.mark_new()
         UnitOfWork.get_current().commit()
 
@@ -226,11 +221,6 @@ class CourseAddCategoryPage(CreateView):
         category_name = data['category_name']
 
         new_category = engine.create_category(category_name)
-        if not parent_category:
-            engine.add_category(new_category)
-
-        UnitOfWork.new_current()
-        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
         new_category.mark_new()
         UnitOfWork.get_current().commit()
@@ -283,8 +273,6 @@ class StudentsAdd(CreateView):
     def create_obj(self, data):
         student = engine.create_user('student', data)
 
-        UnitOfWork.new_current()
-        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
         student.mark_new()
         UnitOfWork.get_current().commit()
 
@@ -322,8 +310,6 @@ class StudentsBindPage(CreateView):
         course.add_student_event()
 
         course_student = engine.student_bind_course(student, course)
-        UnitOfWork.new_current()
-        UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
         course_student.mark_new()
         UnitOfWork.get_current().commit()

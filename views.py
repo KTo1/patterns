@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from savraska.exceptions import InvalidGETException, InvalidPOSTException
+from savraska.database import MapperRegistry, UnitOfWork
+from savraska.exceptions import InvalidGETException
 from savraska.request import Request
 from savraska.view import View, ListView, CreateView
 from savraska.response import Response
@@ -13,6 +14,9 @@ from savraska.urls import Url
 
 
 savraska_loger = Loger('file')
+
+UnitOfWork.new_current()
+UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
 
 urlpatterns = []
@@ -71,8 +75,9 @@ class ContactPage(View):
 
 
 class CoursePage(ListView):
-    queryset = engine.get_categories()
     template_name = 'courses.html'
+    def get_queryset(self):
+        return engine.get_categories()
 
 
 class CourseCategoryPage(View):
@@ -81,8 +86,8 @@ class CourseCategoryPage(View):
         category = ''
         if request.GET:
             category_id = request.GET['id'][0]
+            courses = engine.get_courses_by_category_id(category_id)
             category = engine.get_category_by_id(category_id)
-            courses = engine.get_courses_by_category(category)
 
         context = {'courses': courses, 'category': category}
         body = build_template(request, context, 'courses-category.html')
@@ -90,7 +95,8 @@ class CourseCategoryPage(View):
         return Response(request, body=body)
 
 
-class CourseCopyPage(View):
+class CourseCopyPage(CreateView):
+    template_name = 'courses-category.html'
 
     def get(self, request: Request, *args, **kwargs):
 
@@ -108,32 +114,37 @@ class CourseCopyPage(View):
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
+    def get_request_data(self, request):
+        data = {'category_id': '', 'name': '', 'source_course_id': ''}
 
         if request.POST:
-            category_id = request.POST['category_id'][0]
-            name = request.POST['name'][0]
-            source_course_id = request.POST['source_course_id'][0]
+            data['name'] = request.POST['name'][0]
+            data['source_course_id'] = request.POST['source_course_id'][0]
 
-            category = engine.get_category_by_id(category_id)
-            source_course = engine.get_course_by_id(source_course_id)
-            new_course = source_course.clone()
-            new_course.name = name
+        return data
 
-            category.course_add(new_course)
-            engine.add_course(new_course)
+    def create_obj(self, data):
+        name = data['name']
+        source_course_id = data['source_course_id']
 
-            courses = engine.get_courses_by_category(category)
-        else:
-            raise InvalidPOSTException
+        source_course = engine.get_course_by_id(source_course_id)
+        new_course = source_course.clone()
+        new_course.name = name
 
-        context = {'courses': courses, 'category': category}
-        body = build_template(request, context, 'courses-category.html')
+        new_course.mark_new()
+        UnitOfWork.get_current().commit()
 
-        return Response(request, body=body)
+        engine.data['object'] = new_course
+
+    def get_context_data(self):
+        category = engine.get_category_by_id(engine.data['object'].id_category)
+        courses = engine.get_courses_by_category_id(engine.data['object'].id_category)
+
+        return {'courses': courses, 'category': category}
 
 
-class CourseAddPage(View):
+class CourseAddPage(CreateView):
+    template_name = 'courses-category.html'
 
     def get(self, request: Request, *args, **kwargs):
 
@@ -148,32 +159,43 @@ class CourseAddPage(View):
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
-
+    def get_request_data(self, request):
+        data = {'course_name': '', 'category': ''}
         if request.POST:
             category_id = request.POST['category_id'][0]
             category = engine.get_category_by_id(category_id)
-            new_course = engine.create_course('record', request.POST['name'][0], category)
-            new_course.add_observer(SMSNotifier())
-            new_course.add_observer(EMAILNotifier())
+            course_name = request.POST['name'][0]
 
-            engine.add_course(new_course)
-            courses = engine.get_courses_by_category(category)
-        else:
-            raise InvalidPOSTException
+            data['course_name'] = course_name
+            data['category'] = category
 
-        context = {'courses': courses, 'category': category}
-        body = build_template(request, context, 'courses-category.html')
+        return data
 
-        return Response(request, body=body)
+    def create_obj(self, data):
+        course_name = data['course_name']
+        category = data['category']
+
+        new_course = engine.create_course('record', category.id, course_name)
+        new_course.add_observer(SMSNotifier())
+        new_course.add_observer(EMAILNotifier())
+
+        new_course.mark_new()
+        UnitOfWork.get_current().commit()
+
+        engine.data['object'] = new_course
+
+    def get_context_data(self):
+        category = engine.get_category_by_id(engine.data['object'].id_category)
+        courses = engine.get_courses_by_category_id(engine.data['object'].id_category)
+
+        return  {'courses': courses, 'category': category}
 
 
 class CourseAddCategoryPage(CreateView):
     template_name = 'courses.html'
-    queryset = engine.get_categories()
 
     def get(self, request: Request, *args, **kwargs):
-        parent_category_id = None
+        parent_category_id = 0
         if request.GET:
             parent_category_id = request.GET['category_id'][0]
         context = {'parent_category_id': parent_category_id}
@@ -184,10 +206,9 @@ class CourseAddCategoryPage(CreateView):
     def get_request_data(self, request):
         data = {'parent_category': '', 'category_name': ''}
         if request.POST:
-            parent_category_id = request.POST.get('parent_category_id')
+            parent_category_id = int(request.POST.get('parent_category_id')[0])
             parent_category = None
             if parent_category_id:
-                parent_category_id = parent_category_id[0]
                 parent_category = engine.get_category_by_id(parent_category_id)
 
             data['parent_category'] = parent_category
@@ -199,9 +220,10 @@ class CourseAddCategoryPage(CreateView):
         parent_category = data['parent_category']
         category_name = data['category_name']
 
-        new_category = engine.create_category(category_name, parent_category)
-        if not parent_category:
-            engine.add_category(new_category)
+        new_category = engine.create_category(category_name)
+
+        new_category.mark_new()
+        UnitOfWork.get_current().commit()
 
     def get_context_data(self):
         return {'objects_list': engine.get_categories()}
@@ -233,8 +255,9 @@ class StudentsPage(View):
 
 @AppRoute(urlpatterns, '^/students-list/$')
 class StudentsListPage(ListView):
-    queryset = engine.get_students()
     template_name = 'students-list.html'
+    def get_queryset(self):
+        return engine.get_students()
 
 
 @AppRoute(urlpatterns, '^/students-add/$')
@@ -249,7 +272,9 @@ class StudentsAdd(CreateView):
 
     def create_obj(self, data):
         student = engine.create_user('student', data)
-        engine.add_student(student)
+
+        student.mark_new()
+        UnitOfWork.get_current().commit()
 
     def get(self, request: Request, *args, **kwargs):
         context = {}
@@ -259,33 +284,41 @@ class StudentsAdd(CreateView):
 
 
 @AppRoute(urlpatterns, '^/students-bind/$')
-class StudentsBindPage(View):
+class StudentsBindPage(CreateView):
+    template_name = 'students.html'
+
     def get(self, request: Request, *args, **kwargs):
         context = {'students': engine.get_students(), 'courses': engine.get_courses()}
         body = build_template(request, context, 'students-bind.html')
 
         return Response(request, body=body)
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
+    def get_request_data(self, request):
+        data = {'student': '', 'course': ''}
         if request.POST:
             student_id = request.POST.get('student_id')[0]
             course_id = request.POST.get('course_id')[0]
 
-            student = engine.get_student_by_id(student_id)
-            course = engine.get_course_by_id(course_id)
+            data['student'] = engine.get_student_by_id(student_id)
+            data['course'] = engine.get_course_by_id(course_id)
 
-            course.add_student(student)
+        return data
 
-        context = {}
-        body = build_template(request, context, 'students.html')
+    def create_obj(self, data):
+        student = data['student']
+        course = data['course']
+        course.add_student_event()
 
-        return Response(request, body=body)
+        course_student = engine.student_bind_course(student, course)
+
+        course_student.mark_new()
+        UnitOfWork.get_current().commit()
 
 
 @AppRoute(urlpatterns, '^/api-course/$')
 class CourseApi(View):
     def get(self, request: Request, *args, **kwargs) -> Response:
-        return Response(request, body=JsonSerializer.save(engine.courses))
+        return Response(request, body=JsonSerializer.save(engine.get_courses()))
 
 
 urlpatterns.extend([

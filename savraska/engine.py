@@ -1,23 +1,4 @@
-from copy import deepcopy
-from uuid import uuid4
-
-from savraska.utils import Subject
-
-
-class User:
-    def __init__(self, name: str):
-        self.id = uuid4()
-        self.name = name
-
-
-class Teacher(User):
-    pass
-
-
-class Student(User):
-    def __init__(self, name: str):
-        super(Student, self).__init__(name)
-        self.courses = []
+from savraska.database import Teacher, Student, Category, Course, InteractiveCourse, RecordCourse, MapperRegistry, CourseStudent
 
 
 class UserFactory:
@@ -29,38 +10,8 @@ class UserFactory:
     }
 
     @classmethod
-    def create(cls, user_type: str, name: str):
-        return cls.user_types[user_type](name)
-
-
-class CoursePrototype:
-    """ Паттерн прототип """
-
-    def clone(self):
-        return deepcopy(self)
-
-
-class Course(CoursePrototype, Subject):
-
-    def __init__(self, name, category):
-        self.id = uuid4()
-        self.name = name
-        self.category = category
-        self.students = []
-
-        super(Course, self).__init__()
-
-    def add_student(self, student: Student):
-        self.students.append(student)
-        student.courses.append(self)
-        self.notify()
-
-class InteractiveCourse(Course):
-    pass
-
-
-class RecordCourse(Course):
-    pass
+    def create(cls, user_type: str, id:int, name: str):
+        return cls.user_types[user_type](id, name)
 
 
 class CourseFactory:
@@ -70,48 +21,15 @@ class CourseFactory:
     }
 
     @classmethod
-    def create(cls, course_type, name, category):
-        return cls.course_types[course_type](name, category)
-
-
-class Category:
-
-    def __init__(self, name, parent_category):
-        self.id = uuid4()
-        self.name = name
-        self.parent = parent_category
-        self.courses = []
-        self.categories = []
-        if parent_category:
-            parent_category.categories.append(self)
-
-    def course_add(self, course):
-        self.courses.append(course)
-
-    def course_count(self):
-        result = len(self.courses)
-        if self.parent:
-            result += self.parent.course_count()
-        return result
-
-    def __str__(self):
-        return f'{self.name}: {self.id}'
+    def create(cls, course_type: str, id_category:int, name:str):
+        return cls.course_types[course_type](0, id_category, name)
 
 
 class Engine:
     """ Интерфейс проекта """
 
     def __init__(self):
-        self.teachers = []
-        self.students = []
-        self.courses = []
-        self.categories = []
-
-    def get_students(self):
-        return self.students
-
-    def get_courses(self):
-        return self.courses
+        self.data = {}
 
     def __get_categories_rec(self, categories, category_list, level):
         for category in categories:
@@ -121,61 +39,65 @@ class Engine:
             else:
                 category_list.append({'category': category, 'level': level, 'id': category.id})
 
+    def get_courses(self):
+        return MapperRegistry.get_current_mapper('course').all()
+
+    def get_students(self):
+        return MapperRegistry.get_current_mapper('student').all()
+
     def get_categories(self):
+
+        #TODO переделать на соединение
+
+        mapper_category = MapperRegistry.get_current_mapper('category')
+        mapper_courses = MapperRegistry.get_current_mapper('course')
+
         category_list = []
-        categories = self.categories
+        for category in mapper_category.all():
+            courses = mapper_courses.get_by_category_id(category.id)
+            category_list.append({'category': category, 'level': '', 'id': category.id, 'len': len(courses)})
 
-        self.__get_categories_rec(categories, category_list, level=1)
-
-        category_list = category_list[::-1]
-        for item in category_list:
-            item['level'] = '_' * item['level']
         return category_list
+
+        # category_list = []
+        # categories = self.categories
+        #
+        # self.__get_categories_rec(categories, category_list, level=1)
+        #
+        # category_list = category_list[::-1]
+        # for item in category_list:
+        #     item['level'] = '_' * item['level']
+        # return category_list
 
     @staticmethod
     def create_user(user_type, name):
-        return UserFactory.create(user_type, name)
+        return UserFactory.create(user_type, 0, name)
 
     @staticmethod
     def create_category(name, parent_category=None):
-        return Category(name, parent_category)
+        return Category(0, parent_category, name)
 
     @staticmethod
-    def create_course(course_type, name, category) -> Course:
-        course = CourseFactory.create(course_type, name, category)
-        category.course_add(course)
+    def create_course(course_type, id_category, name) -> Course:
+        return CourseFactory.create(course_type, id_category, name)
 
-        return course
+    def student_bind_course(self, student, course):
+        return CourseStudent(student.id, course.id)
 
     def get_category_by_id(self, category_id):
-        for category in self.get_categories():
-            if str(category['id']) == category_id:
-                return category['category']
-        return None
+        return MapperRegistry.get_current_mapper('category').get(category_id)
 
     def get_course_by_id(self, course_id: str):
-        for course in self.courses:
-            if str(course.id) == course_id:
-                return course
-        return None
+        return MapperRegistry.get_current_mapper('course').get(course_id)
+
+    def get_courses(self):
+        return MapperRegistry.get_current_mapper('course').all()
 
     def get_student_by_id(self, student_id: str):
-        for student in self.students:
-            if str(student.id) == student_id:
-                return student
-        return None
+        return MapperRegistry.get_current_mapper('student').get(student_id)
 
-    def get_courses_by_category(self, category):
-        return  category.courses
-
-    def add_category(self, category):
-        self.categories.append(category)
-
-    def add_course(self, course):
-        self.courses.append(course)
-
-    def add_student(self, student: Student):
-        self.students.append(student)
+    def get_courses_by_category_id(self, category_id):
+        return MapperRegistry.get_current_mapper('course').get_by_category_id(category_id)
 
 
 engine = Engine()

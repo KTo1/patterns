@@ -1,5 +1,8 @@
+import os.path
 from datetime import datetime
+from pathlib import Path
 
+from savraska.content_types import CONTENT_TYPES_MAP
 from savraska.database import MapperRegistry, UnitOfWork
 from savraska.exceptions import InvalidGETException
 from savraska.request import Request
@@ -321,8 +324,39 @@ class CourseApi(View):
         return Response(request, body=JsonSerializer.save(engine.get_courses()))
 
 
+class StaticProcessor(View):
+    def get_content_type(self, file: str) -> str:
+        file_name = os.path.basename(file).lower() # styles.css
+        extension = os.path.splitext(file_name)[1] # .css
+        content_type = CONTENT_TYPES_MAP.get(extension, "text/html")
+
+        return f'{content_type}; charset=UTF-8'
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        static_dir = request.settings.get('STATIC_DIR_NAME')
+        static_file = request.environ.get('PATH_INFO').replace('/static/', '')
+        static_file = static_file.split('/')
+        root_path = os.path.dirname(__file__)
+
+        file_name = Path(root_path) / static_dir
+        for file in static_file:
+            file_name = file_name / file
+
+        with open(file_name, 'r') as f:
+            body = f.read()
+
+        headers = {
+            'Content-Type': self.get_content_type(static_file[-1])
+        }
+
+        response = Response(request, body=body)
+        response.update_headers(headers)
+
+        return response
+
 urlpatterns.extend([
     Url('^/$', IndexPage),
+    Url('^/static/.*$', StaticProcessor),
     Url('^/contact/$', ContactPage),
     Url('^/schedules/$', SchedulesPage),
     Url('^/courses/$', CoursePage),

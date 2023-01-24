@@ -29,7 +29,7 @@ class Engine:
 def build_template(request: Request, context: dict, template_name: str) -> str:
     assert request.settings.get('BASE_DIR')
     assert request.settings.get('TEMPLATES_DIR_NAME')
-    assert request.settings.get('STATIC_DIR')
+    assert request.settings.get('STATIC_DIR_NAME')
 
     base_dir = request.settings.get('BASE_DIR')
     template_dir_name = request.settings.get('TEMPLATES_DIR_NAME')

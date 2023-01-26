@@ -6,10 +6,10 @@ from savraska.request import Request
 
 class Engine:
 
-    def __init__(self, base_dir: str, template_dir: str, static_dir_name: str):
+    def __init__(self, base_dir: str, template_dir: str, static_url: str):
         self.template_dir = template_dir
         self.full_template_dir = os.path.join(base_dir, template_dir)
-        self.static_url = f'/{static_dir_name}/'
+        self.static_url = f'/{static_url}/'
 
     def as_string(self, template_name: str):
         template_path = os.path.join(self.full_template_dir, template_name)
@@ -29,12 +29,12 @@ class Engine:
 def build_template(request: Request, context: dict, template_name: str) -> str:
     assert request.settings.get('BASE_DIR')
     assert request.settings.get('TEMPLATES_DIR_NAME')
-    assert request.settings.get('STATIC_DIR_NAME')
+    assert request.settings.get('STATIC_URL')
 
     base_dir = request.settings.get('BASE_DIR')
     template_dir_name = request.settings.get('TEMPLATES_DIR_NAME')
-    static_dir_name = request.settings.get('STATIC_DIR_NAME')
+    static_url = request.settings.get('STATIC_URL')
 
-    engine = Engine(base_dir, template_dir_name, static_dir_name)
+    engine = Engine(base_dir, template_dir_name, static_url)
 
     return engine.build(context, template_name)

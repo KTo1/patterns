@@ -10,6 +10,7 @@ settings = {
     'BASE_DIR': os.path.dirname(os.path.abspath(__file__)),
     'TEMPLATES_DIR_NAME': 'templates',
     'STATIC_DIR_NAME': 'staticfiles',
+    'STATIC_URL': 'static'
 }
 
 

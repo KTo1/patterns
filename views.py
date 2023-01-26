@@ -342,14 +342,16 @@ class StaticProcessor(View):
         for file in static_file:
             file_name = file_name / file
 
-        with open(file_name, 'r') as f:
+        with open(file_name, 'rb') as f:
             body = f.read()
 
         headers = {
             'Content-Type': self.get_content_type(static_file[-1])
         }
 
-        response = Response(request, body=body)
+        response = Response(request)
+        response.body = body
+
         response.update_headers(headers)
 
         return response
